@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/struct0x/envconfig"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Environment string
