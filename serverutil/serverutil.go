@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"suppa-ahg-stack/common-golang/logger"
 )
 
 // Options configures the behaviour of ServerUtil.
@@ -29,7 +30,7 @@ type Options struct {
 	Handler http.Handler
 
 	// Logger is the structured logger. If nil, slog.Default() is used.
-	Logger *slog.Logger
+	Logger *logger.FileLogger
 }
 
 // ServerUtil holds the configuration and provides methods to create and run an HTTP server.
@@ -41,14 +42,14 @@ type ServerUtil struct {
 // If Options.Addr is empty, environment variables will be used.
 // If Options.ShutdownTimeout is zero, 10 seconds will be used.
 // If Options.Logger is nil, slog.Default() will be used.
-func NewServerUtil(opts Options) *ServerUtil {
+func NewServerUtil(opts Options) (*ServerUtil, error) {
 	if opts.ShutdownTimeout == 0 {
 		opts.ShutdownTimeout = 10 * time.Second
 	}
 	if opts.Logger == nil {
-		opts.Logger = slog.Default()
+		return nil, errors.New("logger should be included in the option struct")
 	}
-	return &ServerUtil{opts: opts}
+	return &ServerUtil{opts: opts}, nil
 }
 
 // CreateServer builds an http.Server using the configured options.
