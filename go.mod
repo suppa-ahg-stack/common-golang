@@ -1,3 +1,3 @@
-module github.com/t1m0t/suppa_common_golang
+module suppa-ahg-stack/common_golang
 
-go 1.25.5
+go 1.26.2
