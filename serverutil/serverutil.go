@@ -3,6 +3,7 @@ package serverutil
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -31,6 +32,14 @@ type Options struct {
 
 	// Logger is the structured logger. If nil, slog.Default() is used.
 	Logger *logger.FileLogger
+
+	TlsConfig *tls.Config
+
+	ReadTimeout time.Duration
+
+	WriteTimeout time.Duration
+
+	IdleTimeout time.Duration
 }
 
 // ServerUtil holds the configuration and provides methods to create and run an HTTP server.
@@ -55,21 +64,25 @@ func NewServerUtil(opts Options) (*ServerUtil, error) {
 // CreateServer builds an http.Server using the configured options.
 // If the handler parameter is non-nil, it overrides Options.Handler.
 // Returns an error if the address cannot be resolved.
-func (su *ServerUtil) CreateServer(handler http.Handler) (*http.Server, error) {
+func (su *ServerUtil) CreateServer() (*http.Server, error) {
 	addr := su.opts.Addr
 
 	h := su.opts.Handler
-	if handler != nil {
-		h = handler
-	}
 	if h == nil {
 		return nil, errors.New("no handler provided")
 	}
 
-	return &http.Server{
-		Addr:    addr,
-		Handler: h,
-	}, nil
+	server := &http.Server{
+		Addr:         addr,
+		Handler:      h,
+		WriteTimeout: su.opts.WriteTimeout,
+		ReadTimeout:  su.opts.ReadTimeout,
+		IdleTimeout:  su.opts.IdleTimeout,
+	}
+
+	server.TLSConfig = su.opts.TlsConfig
+
+	return server, nil
 }
 
 // RunServer starts the server and handles graceful shutdown.
@@ -83,8 +96,14 @@ func (su *ServerUtil) RunServer(ctx context.Context, srv *http.Server) error {
 	serveError := make(chan error, 1)
 	go func() {
 		su.logf("Starting server on %s", srv.Addr)
-		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			serveError <- err
+		if su.opts.TlsConfig != nil {
+			if err := srv.ListenAndServeTLS("", ""); !errors.Is(err, http.ErrServerClosed) {
+				serveError <- err
+			}
+		} else {
+			if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+				serveError <- err
+			}
 		}
 		close(serveError)
 	}()
