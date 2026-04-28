@@ -138,7 +138,7 @@ func (su *ServerUtil) RunServer(ctx context.Context, srv *http.Server) error {
 }
 
 // logf writes a formatted log message at Info level using the configured slog.Logger.
-func (su *ServerUtil) logf(format string, v ...interface{}) {
+func (su *ServerUtil) logf(format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
 	su.opts.Logger.Info(msg)
 }
