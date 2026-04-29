@@ -44,11 +44,10 @@ func Handler[T any](sseEvent *SseEvent[T]) http.HandlerFunc {
 		w.Header().Set("Connection", "keep-alive")
 		w.Header().Set("X-Accel-Buffering", "no") // disable nginx buffering
 
+		_, events, cleanup := sseEvent.Broker.subscribe(r.Context())
 		if sseEvent.OnConnectHandler != nil {
 			sseEvent.OnConnectHandler(r)
 		}
-
-		_, events, cleanup := sseEvent.Broker.subscribe(r.Context())
 		defer func() {
 			cleanup()
 			if sseEvent.OnDisconnectHandler != nil {
