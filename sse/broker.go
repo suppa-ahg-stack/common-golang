@@ -39,7 +39,7 @@ func NewBroker(bufSize int) *Broker {
 }
 
 // subscribe registers a client and returns its event channel + cleanup func.
-func (b *Broker) subscribe(ctx context.Context) (uint64, <-chan Event, context.CancelFunc) {
+func (b *Broker) Subscribe(ctx context.Context) (uint64, <-chan Event, context.CancelFunc) {
 	id := b.nextID.Add(1)
 	ctx, cancel := context.WithCancel(ctx)
 	c := &client{

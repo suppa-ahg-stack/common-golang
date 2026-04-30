@@ -55,7 +55,7 @@ func Handler(sseEvents *SseEvents) http.HandlerFunc {
 		var minHeartbeat time.Duration
 
 		for _, sseEvent := range sseEvents.Events {
-			_, events, cleanup := sseEvent.GetBroker().subscribe(r.Context())
+			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context())
 
 			sseEvent.OnConnect(r)
 
