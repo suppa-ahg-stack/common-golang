@@ -1,18 +1,18 @@
 package sse
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-type SseEvent[T any] struct {
+type SseEventOpts struct {
 	HeartbeatInterval   time.Duration
 	OnConnectHandler    func(*http.Request)
 	OnDisconnectHandler func(*http.Request)
-	Data                T
-	Broker              *Broker[T]
+	Event               *Event
+	Broker              *Broker
 	Name                string
 }
 
@@ -30,7 +30,7 @@ type HandlerOptions struct {
 }
 
 // Handler returns an http.HandlerFunc that streams typed SSE events.
-func Handler[T any](sseEvent *SseEvent[T]) http.HandlerFunc {
+func Handler(sseEvents *SseEvents) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// SSE requires a flushing ResponseWriter.
 		flusher, ok := w.(http.Flusher)
@@ -42,39 +42,74 @@ func Handler[T any](sseEvent *SseEvent[T]) http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
-		w.Header().Set("X-Accel-Buffering", "no") // disable nginx buffering
+		w.Header().Set("X-Accel-Buffering", "no")
 
-		_, events, cleanup := sseEvent.Broker.subscribe(r.Context())
-		if sseEvent.OnConnectHandler != nil {
-			sseEvent.OnConnectHandler(r)
-		}
-		defer func() {
-			cleanup()
-			if sseEvent.OnDisconnectHandler != nil {
-				sseEvent.OnDisconnectHandler(r)
-			}
-		}()
+		// Fan-in channel: all event streams converge here.
+		merged := make(chan Event)
 
+		// Single connection-level heartbeat.
 		var heartbeat <-chan time.Time
-		if sseEvent.HeartbeatInterval > 0 {
-			t := time.NewTicker(sseEvent.HeartbeatInterval)
-			defer t.Stop()
-			heartbeat = t.C
+		var ticker *time.Ticker
+
+		// Use the smallest configured heartbeat interval.
+		var minHeartbeat time.Duration
+
+		for _, sseEvent := range sseEvents.Events {
+			_, events, cleanup := sseEvent.GetBroker().subscribe(r.Context())
+
+			sseEvent.OnConnect(r)
+
+			defer func(event EventHandler, cleanupFn context.CancelFunc) {
+				cleanupFn()
+				event.OnDisconnect(r)
+			}(sseEvent, cleanup)
+
+			interval := sseEvent.GetHeartbeatInterval()
+			if interval > 0 && (minHeartbeat == 0 || interval < minHeartbeat) {
+				minHeartbeat = interval
+			}
+
+			// One goroutine per broker: reads only, never writes to ResponseWriter.
+			go func(events <-chan Event) {
+				for {
+					select {
+					case <-r.Context().Done():
+						return
+
+					case e, ok := <-events:
+						if !ok {
+							return
+						}
+
+						select {
+						case merged <- e:
+						case <-r.Context().Done():
+							return
+						}
+					}
+				}
+			}(events)
 		}
 
+		if minHeartbeat > 0 {
+			ticker = time.NewTicker(minHeartbeat)
+			defer ticker.Stop()
+			heartbeat = ticker.C
+		}
+
+		// Single writer loop.
 		for {
 			select {
 			case <-r.Context().Done():
 				return
 
 			case <-heartbeat:
-				fmt.Fprintf(w, ": ping\n\n")
-				flusher.Flush()
-
-			case e, ok := <-events:
-				if !ok {
+				if _, err := fmt.Fprintf(w, ": ping\n\n"); err != nil {
 					return
 				}
+				flusher.Flush()
+
+			case e := <-merged:
 				if err := writeEvent(w, e); err != nil {
 					return
 				}
@@ -85,7 +120,7 @@ func Handler[T any](sseEvent *SseEvent[T]) http.HandlerFunc {
 }
 
 // writeEvent serialises a typed Event to the SSE wire format.
-func writeEvent[T any](w http.ResponseWriter, e Event[T]) error {
+func writeEvent(w http.ResponseWriter, e Event) error {
 	if e.ID != "" {
 		fmt.Fprintf(w, "id: %s\n", e.ID)
 	}
@@ -96,10 +131,6 @@ func writeEvent[T any](w http.ResponseWriter, e Event[T]) error {
 		fmt.Fprintf(w, "retry: %d\n", e.Retry)
 	}
 
-	data, err := json.Marshal(e.Data)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(w, "data: %s\n\n", data)
+	fmt.Fprintf(w, "data: %s\n\n", e.Data)
 	return nil
 }
