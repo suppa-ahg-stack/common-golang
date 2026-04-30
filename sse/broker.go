@@ -16,7 +16,6 @@ type Event struct {
 // client holds a subscriber's send channel and context.
 type client struct {
 	ch     chan Event
-	ctx    context.Context
 	cancel context.CancelFunc
 }
 
@@ -44,9 +43,8 @@ func (b *Broker) Subscribe(ctx context.Context) (uint64, <-chan Event, context.C
 	ctx, cancel := context.WithCancel(ctx)
 	c := &client{
 		ch:     make(chan Event, b.buf),
-		ctx:    ctx,
 		cancel: cancel,
-	}
+}
 
 	b.mu.Lock()
 	b.clients[id] = c
@@ -54,8 +52,12 @@ func (b *Broker) Subscribe(ctx context.Context) (uint64, <-chan Event, context.C
 
 	return id, c.ch, func() {
 		cancel()
+
 		b.mu.Lock()
-		delete(b.clients, id)
+		if client, ok := b.clients[id]; ok {
+			delete(b.clients, id)
+			close(client.ch)
+		}
 		b.mu.Unlock()
 	}
 }
@@ -79,4 +81,38 @@ func (b *Broker) Count() int {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	return len(b.clients)
+}
+
+func (b *Broker) PublishTo(clientID uint64, e Event) bool {
+	b.mu.RLock()
+	client, ok := b.clients[clientID]
+	b.mu.RUnlock()
+
+	if !ok {
+		return false
+	}
+
+	select {
+	case client.ch <- e:
+		return true
+	default:
+		return false // client too slow
+	}
+}
+
+func (b *Broker) PublishMany(clientIDs []uint64, e Event) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	for _, id := range clientIDs {
+		client, ok := b.clients[id]
+		if !ok {
+			continue
+		}
+
+		select {
+		case client.ch <- e:
+		default:
+		}
+	}
 }
