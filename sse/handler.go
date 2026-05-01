@@ -2,8 +2,10 @@ package sse
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"suppa-ahg-stack/common-golang/logger"
 	"time"
 )
 
@@ -30,7 +32,7 @@ type HandlerOptions struct {
 }
 
 // Handler returns an http.HandlerFunc that streams typed SSE events.
-func Handler(sseEvents *SseEvents) http.HandlerFunc {
+func Handler(sseEvents *SseEvents, sessionName string, logger *logger.FileLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// SSE requires a flushing ResponseWriter.
 		flusher, ok := w.(http.Flusher)
@@ -54,8 +56,16 @@ func Handler(sseEvents *SseEvents) http.HandlerFunc {
 		// Use the smallest configured heartbeat interval.
 		var minHeartbeat time.Duration
 
+		cookie, err := r.Cookie(sessionName)
+
+		if errors.Is(err, http.ErrNoCookie) {
+			logger.Error("No session cookie found during sse handler execution")
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
+
 		for _, sseEvent := range sseEvents.Events {
-			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context())
+			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context(), cookie.Value)
 
 			sseEvent.OnConnect(r)
 
