@@ -2,6 +2,9 @@
 package generalutil
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
@@ -48,4 +51,17 @@ func ResolvePath(relPath string) string {
 	cleanRel := strings.TrimPrefix(relPath, ".")
 	cleanRel = strings.TrimPrefix(cleanRel, string(os.PathSeparator))
 	return filepath.Join(cwd, cleanRel)
+}
+
+func GenerateToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func HashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return fmt.Sprintf("%x", h)
 }
