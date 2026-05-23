@@ -92,7 +92,7 @@ func (v *Validator[T]) Validate() {
 							case "password":
 								v.CheckPasswordIsValid(field, values.Field(i), key)
 							case "email":
-								v.CheckPasswordIsValid(field, values.Field(i), key)
+								v.CheckEmailIsValid(field, values.Field(i), key)
 							}
 						}
 					}

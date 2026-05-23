@@ -19,6 +19,18 @@ func ClearSessionCookie(w http.ResponseWriter, sessionName string, secure bool) 
 	})
 }
 
+func ClearCsrfCookie(w http.ResponseWriter, csrfCookieName string, secure bool) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     csrfCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+}
+
 type contextKey struct{}
 
 var NonceKey = contextKey{}

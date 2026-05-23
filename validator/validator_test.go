@@ -433,7 +433,7 @@ func TestValidateEmail(t *testing.T) {
 	for i, email := range emails {
 		t.Run(fmt.Sprintf("invalid email %d", i), func(t *testing.T) {
 			type EmailStruct struct {
-				Email string `validation:"email"`
+				Email string `validation:"required,email"`
 			}
 			v := &Validator[EmailStruct]{
 				ToValidate: &EmailStruct{Email: email},
