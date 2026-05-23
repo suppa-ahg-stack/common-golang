@@ -249,12 +249,12 @@ func (v *Validator[T]) CheckPasswordIsValid(field reflect.StructField, value ref
 }
 
 func (v *Validator[T]) CheckEmailIsValid(field reflect.StructField, value reflect.Value, checkFor string) {
-	email, ok := any(value).(*string)
-	if !ok {
+	if field.Type.Kind() != reflect.String {
 		v.AddError(field.Name, "type", "invalid_email_type")
 		return
 	}
-	isValid := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`).MatchString((*email))
+	email := value.String()
+	isValid := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`).MatchString(email)
 	if !isValid {
 		v.AddError(field.Name, "invalid", "email_invalid")
 	}
