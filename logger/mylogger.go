@@ -1,10 +1,13 @@
 package logger
 
 import (
-	"io"
+	"context"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/lmittmann/tint"
 )
 
 // LogConfig holds configuration for the logger.
@@ -27,8 +30,50 @@ func (l *FileLogger) Close() error {
 	return nil
 }
 
-// NewFileLogger creates a logger that writes JSON logs to both the given file and stdout.
-// It ensures the parent directory exists. Returns a FileLogger that can be closed.
+// multiHandler dispatches log records to multiple handlers.
+type multiHandler struct {
+	handlers []slog.Handler
+}
+
+func (m *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	for _, h := range m.handlers {
+		if h.Enabled(ctx, level) {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *multiHandler) Handle(ctx context.Context, r slog.Record) error {
+	for _, h := range m.handlers {
+		if h.Enabled(ctx, r.Level) {
+			if err := h.Handle(ctx, r); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	handlers := make([]slog.Handler, len(m.handlers))
+	for i, h := range m.handlers {
+		handlers[i] = h.WithAttrs(attrs)
+	}
+	return &multiHandler{handlers: handlers}
+}
+
+func (m *multiHandler) WithGroup(name string) slog.Handler {
+	handlers := make([]slog.Handler, len(m.handlers))
+	for i, h := range m.handlers {
+		handlers[i] = h.WithGroup(name)
+	}
+	return &multiHandler{handlers: handlers}
+}
+
+// NewFileLogger creates a logger that writes JSON logs to the given file
+// and colored text logs to stdout. It ensures the parent directory exists.
+// Returns a FileLogger that can be closed.
 func NewFileLogger(cfg LogConfig) (*FileLogger, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(cfg.Filename)
@@ -42,18 +87,25 @@ func NewFileLogger(cfg LogConfig) (*FileLogger, error) {
 		return nil, err
 	}
 
-	// Create a multi-writer: file + stdout
-	multiWriter := io.MultiWriter(file, os.Stdout)
-
-	// Create JSON handler with the desired log level
-	handlerOpts := &slog.HandlerOptions{
+	// File handler: JSON format for structured parsing
+	jsonHandler := slog.NewJSONHandler(file, &slog.HandlerOptions{
 		Level: cfg.Level,
+	})
+
+	// Console handler: colored text format via tint
+	tintHandler := tint.NewHandler(os.Stdout, &tint.Options{
+		Level:      cfg.Level,
+		TimeFormat: time.DateTime,
+	})
+
+	// Combine both handlers
+	multi := &multiHandler{
+		handlers: []slog.Handler{jsonHandler, tintHandler},
 	}
-	handler := slog.NewJSONHandler(multiWriter, handlerOpts)
 
 	// Return the wrapper containing the logger and the file handle
 	return &FileLogger{
-		Logger: slog.New(handler),
+		Logger: slog.New(multi),
 		file:   file,
 	}, nil
 }

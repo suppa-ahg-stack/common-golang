@@ -6,6 +6,7 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/invopop/ctxi18n v0.9.0
 	github.com/joho/godotenv v1.5.1
+	github.com/lmittmann/tint v1.1.3
 	golang.org/x/crypto v0.51.0
 )
 
