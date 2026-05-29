@@ -155,6 +155,19 @@ func (b *Broker) PublishToUsers(userIDs []string, e Event) {
 	}
 }
 
+// UpdateUserID re-associates all connections matching oldUserID to newUserID.
+// Used when a session token rotates but the underlying browser connection stays open.
+func (b *Broker) UpdateUserID(oldUserID string, newUserID string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	for _, conn := range b.connections {
+		if conn.userID == oldUserID {
+			conn.userID = newUserID
+		}
+	}
+}
+
 func (b *Broker) removeConnection(id uint64) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
