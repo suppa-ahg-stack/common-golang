@@ -12,12 +12,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type SseNames struct {
-	ReloadDevEventData string
-	TimeEventData      string
-	DomUpdateEventData string
-}
-
 type PageComponent struct {
 	ContentFunc    func() templ.Component
 	TargetSelector string
@@ -29,16 +23,16 @@ type csrf struct {
 	expiresAt time.Time
 }
 
-type App[TConfig any, TQueries any] struct {
+type App[TConfig any, TQueries any, TSessionService any, TSseNames any] struct {
 	Config          *TConfig
 	Logger          *logger.FileLogger
 	Db              *pgxpool.Pool
 	Queries         *TQueries
 	SseEvents       *sse.SseEvents
-	SseNames        *SseNames
+	SseNames        *TSseNames
 	DomUpdateBroker *sse.Broker
 	RateLimiter     *serverutil.RateLimiter
-	SessionManager  *serverutil.SessionManager
+	SessionService  *TSessionService
 	EmailSender     *serverutil.EmailSender
 	Cookies         struct {
 		LangCookie *http.Cookie
