@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"io"
 	"net/http"
 	"time"
 
@@ -12,10 +14,34 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type PageComponent struct {
-	ContentFunc    func() templ.Component
+type RenderableComponent interface {
+	Render(r *http.Request, ctx context.Context, w io.Writer) error
+	GetTargetSelector() string
+	IsLayoutComponent() bool
+}
+
+type PageComponent[TProps any] struct {
+	Props          TProps
+	PropsBuilder   func(r *http.Request) TProps
+	ContentFunc    func(props TProps) templ.Component
 	TargetSelector string
 	IsLayout       bool
+}
+
+func (pc PageComponent[TProps]) Render(r *http.Request, ctx context.Context, w io.Writer) error {
+	props := pc.Props
+	if pc.PropsBuilder != nil {
+		props = pc.PropsBuilder(r)
+	}
+	return pc.ContentFunc(props).Render(ctx, w)
+}
+
+func (pc PageComponent[TProps]) GetTargetSelector() string {
+	return pc.TargetSelector
+}
+
+func (pc PageComponent[TProps]) IsLayoutComponent() bool {
+	return pc.IsLayout
 }
 
 type csrf struct {
@@ -38,5 +64,5 @@ type App[TConfig any, TQueries any, TSessionService any, TSseNames any] struct {
 		LangCookie *http.Cookie
 	}
 	Routes        map[string]serverutil.PageRoute
-	PageComponent map[string]map[string]PageComponent
+	PageComponent map[string]map[string]RenderableComponent
 }
