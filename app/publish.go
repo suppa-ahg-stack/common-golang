@@ -64,7 +64,7 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragmentForP
 	r = r.WithContext(ctx)
 	var buf bytes.Buffer
 	if err := route.PageContentFunc().Render(ctx, &buf); err != nil {
-		a.Logger.Error("Failed to render fragment for %s: %v", path, err)
+		a.Logger.Error(fmt.Sprintf("Failed to render fragment for %s: %v", path, err))
 		return
 	}
 

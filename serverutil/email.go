@@ -22,6 +22,9 @@ func NewEmailSender(host string, port int, user, password, from string) *EmailSe
 }
 
 func (e *EmailSender) SendResetPassword(to, resetLink string) error {
+	if e.dialer.Host == "" {
+		return nil
+	}
 	m := mail.NewMessage()
 	m.SetHeader("From", e.from)
 	m.SetHeader("To", to)
@@ -34,6 +37,9 @@ func (e *EmailSender) SendResetPassword(to, resetLink string) error {
 }
 
 func (e *EmailSender) SendOtpCode(to, code string) error {
+	if e.dialer.Host == "" {
+		return nil
+	}
 	m := mail.NewMessage()
 	m.SetHeader("From", e.from)
 	m.SetHeader("To", to)
