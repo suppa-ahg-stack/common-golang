@@ -63,6 +63,7 @@ type App[TConfig any, TQueries any, TSessionService any, TSseNames any] struct {
 	Cookies         struct {
 		LangCookie *http.Cookie
 	}
-	Routes        map[string]serverutil.PageRoute
-	PageComponent map[string]map[string]RenderableComponent
+	Routes         map[string]serverutil.PageRoute
+	PageComponent  map[string]map[string]RenderableComponent
+	FragmentPlanner *FragmentPlanner
 }
