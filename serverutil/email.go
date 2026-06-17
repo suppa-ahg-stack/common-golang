@@ -36,7 +36,7 @@ func (e *EmailSender) SendResetPassword(to, resetLink string) error {
 	return e.dialer.DialAndSend(m)
 }
 
-func (e *EmailSender) SendOtpCode(to, code string) error {
+func (e *EmailSender) SendOtpCode(to, code string, ttlSeconds int) error {
 	if e.dialer.Host == "" {
 		return nil
 	}
@@ -45,8 +45,24 @@ func (e *EmailSender) SendOtpCode(to, code string) error {
 	m.SetHeader("To", to)
 	m.SetHeader("Subject", "Your verification code")
 	m.SetBody("text/plain", fmt.Sprintf(
-		"Your verification code is: %s\n\nThis code expires in 5 minutes.\n\nIf you did not request this, ignore this email.",
+		"Your verification code is: %s\n\nThis code expires in %s.\n\nIf you did not request this, ignore this email.",
 		code,
+		formatTTL(ttlSeconds),
 	))
 	return e.dialer.DialAndSend(m)
+}
+
+func formatTTL(seconds int) string {
+	if seconds < 60 {
+		return fmt.Sprintf("%d seconds", seconds)
+	}
+	minutes := seconds / 60
+	remainingSeconds := seconds % 60
+	if remainingSeconds == 0 {
+		if minutes == 1 {
+			return "1 minute"
+		}
+		return fmt.Sprintf("%d minutes", minutes)
+	}
+	return fmt.Sprintf("%d minutes %d seconds", minutes, remainingSeconds)
 }
