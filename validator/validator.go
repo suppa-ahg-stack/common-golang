@@ -248,6 +248,27 @@ func (v *Validator[T]) CheckPasswordIsValid(field reflect.StructField, value ref
 	}
 }
 
+// ValidatePassword checks a single password against the shared password policy.
+// It returns a slice of ValidationError; an empty slice means the password is valid.
+func ValidatePassword(password string) []ValidationError {
+	type passwordCheck struct {
+		Password string `validation:"password"`
+	}
+	v := &Validator[passwordCheck]{
+		ToValidate: &passwordCheck{Password: password},
+		PasswordRules: PasswordRules{
+			min:                  8,
+			max:                  32,
+			numberOfUpperChars:   1,
+			numberOfLowerChars:   1,
+			numberOfDigits:       1,
+			numberOfSpecialChars: 1,
+		},
+	}
+	v.Validate()
+	return v.FieldErrors
+}
+
 func (v *Validator[T]) CheckEmailIsValid(field reflect.StructField, value reflect.Value, checkFor string) {
 	if field.Type.Kind() != reflect.String {
 		v.AddError(field.Name, "type", "invalid_email_type")

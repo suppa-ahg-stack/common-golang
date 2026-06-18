@@ -3,6 +3,7 @@ package validator
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -441,6 +442,35 @@ func TestValidateEmail(t *testing.T) {
 			v.Validate()
 			if !v.HasErrors() {
 				t.Fatalf("expected email %s to fail", email)
+			}
+		})
+	}
+}
+
+func TestValidatePassword(t *testing.T) {
+	cases := []struct {
+		name     string
+		password string
+		wantErr  bool
+	}{
+		{"valid password", "Hello1!x", false},
+		{"too short", "Hi1!", true},
+		{"too long", "Hello1!x" + strings.Repeat("a", 30), true},
+		{"missing uppercase", "hello1!x", true},
+		{"missing lowercase", "HELLO1!X", true},
+		{"missing digit", "Hello!!x", true},
+		{"missing special char", "Hello11x", true},
+		{"invalid character", "Hello1!€", true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			errs := ValidatePassword(tc.password)
+			if tc.wantErr && len(errs) == 0 {
+				t.Fatalf("expected password %q to fail validation", tc.password)
+			}
+			if !tc.wantErr && len(errs) > 0 {
+				t.Fatalf("expected password %q to pass, got errors: %v", tc.password, errs)
 			}
 		})
 	}
