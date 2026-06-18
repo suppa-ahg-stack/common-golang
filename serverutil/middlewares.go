@@ -7,11 +7,12 @@ import (
 	"net/http"
 )
 
-func ClearSessionCookie(w http.ResponseWriter, sessionName string, secure bool) {
+func ClearSessionCookie(w http.ResponseWriter, sessionName, domain string, secure bool) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionName,
 		Value:    "",
 		Path:     "/",
+		Domain:   domain,
 		HttpOnly: true,
 		Secure:   secure,
 		SameSite: http.SameSiteLaxMode,

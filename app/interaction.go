@@ -302,6 +302,15 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandlerW
 			}
 		}
 
+		// Enforce path-based access control for action requests too. The action
+		// handler will refresh/re-render payload.Path, so the caller must be
+		// allowed to access that path.
+		if pathAccessChecker != nil && !pathAccessChecker(user, payload.Path) {
+			a.Logger.Warn(fmt.Sprintf("InteractionHandlerWithPlanner: forbidden action path %s", payload.Path))
+			http.Error(rec, "forbidden", http.StatusForbidden)
+			return
+		}
+
 		if preActionHook != nil {
 			ctx, ok := preActionHook(rec, r, actionData.Action, payload.Path)
 			if !ok {
