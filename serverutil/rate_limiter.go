@@ -2,6 +2,7 @@ package serverutil
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -77,9 +78,19 @@ func (rl *RateLimiter) Stop() {
 	close(rl.stopCh)
 }
 
+// ClientIP returns the host portion of r.RemoteAddr, stripping the ephemeral
+// source port. If RemoteAddr cannot be parsed, the raw value is returned.
+func ClientIP(r *http.Request) string {
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
+}
+
 func RateLimitMiddleware(next http.Handler, rl *RateLimiter, sessionName string, l *logger.FileLogger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ip := r.RemoteAddr
+		ip := ClientIP(r)
 		ua := r.UserAgent()
 
 		sessionID := ""
