@@ -150,6 +150,7 @@ func TestInteractionHandlerWithPlanner_AllowsActionOnAllowedPath(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	body, _ := json.Marshal(UihPayload{
@@ -196,6 +197,7 @@ func TestInteractionHandlerWithPlanner_ForbidsActionOnForbiddenPath(t *testing.T
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	body, _ := json.Marshal(UihPayload{
@@ -237,6 +239,7 @@ func TestInteractionHandlerWithPlanner_ForbidsNonActionReRenderOnForbiddenPath(t
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	body, _ := json.Marshal(UihPayload{
@@ -264,4 +267,96 @@ func mustJSON(v any) json.RawMessage {
 		panic(err)
 	}
 	return b
+}
+
+
+func TestInteractionHandlerWithPlanner_MfaCheckerBlocksAction(t *testing.T) {
+	a := newTestInteractionApp(t)
+	invoked := false
+	handler := func(w http.ResponseWriter, r *http.Request, data json.RawMessage, selector, path string) {
+		invoked = true
+		w.WriteHeader(http.StatusNoContent)
+	}
+
+	mfaChecker := func(ctx context.Context, user any, action, path string) bool {
+		return false
+	}
+
+	h := a.InteractionHandlerWithPlanner(
+		nil,
+		testCsrfChecker{},
+		map[string]ActionHandlerWithPath{"create-organisation": handler},
+		actionRolesForTest,
+		nil,
+		pathAccessForTest,
+		currentTestUser,
+		nil,
+		nil,
+		mfaChecker,
+		nil,
+	)
+
+	body, _ := json.Marshal(UihPayload{
+		Path:     "/organisations/",
+		Selector: "#page-content",
+		Data: mustJSON(map[string]any{
+			"action": "create-organisation",
+			"csrf":   "valid-csrf",
+		}),
+	})
+	req := httptest.NewRequest(http.MethodPost, "/uih", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "session", Value: "session-token"})
+	ctx := withTestUser(req.Context(), testUser{roles: []string{"organisation_manager"}})
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rr.Code)
+	}
+	if invoked {
+		t.Fatal("expected action handler not to be invoked")
+	}
+}
+
+func TestInteractionHandlerWithPlanner_MfaCheckerBlocksNonActionReRender(t *testing.T) {
+	a := newTestInteractionApp(t)
+
+	mfaChecker := func(ctx context.Context, user any, action, path string) bool {
+		return false
+	}
+
+	h := a.InteractionHandlerWithPlanner(
+		nil,
+		testCsrfChecker{},
+		nil,
+		actionRolesForTest,
+		nil,
+		pathAccessForTest,
+		currentTestUser,
+		nil,
+		nil,
+		mfaChecker,
+		nil,
+	)
+
+	body, _ := json.Marshal(UihPayload{
+		Path:     "/organisations/",
+		Selector: "#page-content",
+		Data:     json.RawMessage(`{}`),
+	})
+	req := httptest.NewRequest(http.MethodPost, "/uih", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: "session", Value: "session-token"})
+	ctx := withTestUser(req.Context(), testUser{roles: []string{"organisation_manager"}})
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	h.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rr.Code)
+	}
 }

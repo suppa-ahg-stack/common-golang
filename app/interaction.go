@@ -144,6 +144,11 @@ type CurrentUserFunc func(r *http.Request) any
 // It can rewrite the request context or reject the request.
 type PreActionHook func(w http.ResponseWriter, r *http.Request, action, path string) (context.Context, bool)
 
+// MfaChecker runs after context enrichment and before path/action access checks.
+// It returns true when the request is allowed to proceed with the current MFA
+// state. A nil MfaChecker means no MFA gate is enforced.
+type MfaChecker func(ctx context.Context, user any, action, path string) bool
+
 // ContextEnricher validates the session token and returns an enriched context.
 // It is used when the request middleware does not already populate the context
 // with the authenticated user.
@@ -169,6 +174,7 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandlerW
 	currentUser CurrentUserFunc,
 	contextEnricher ContextEnricher,
 	preActionHook PreActionHook,
+	mfaChecker MfaChecker,
 	hooks *InteractionHooks,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +232,12 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandlerW
 		}
 
 		user := currentUser(r)
+		if user != nil && mfaChecker != nil && !mfaChecker(r.Context(), user, actionData.Action, payload.Path) {
+			a.Logger.Warn(fmt.Sprintf("InteractionHandlerWithPlanner: MFA required for user on %s action=%s", payload.Path, actionData.Action))
+			http.Error(rec, "MFA required", http.StatusUnauthorized)
+			return
+		}
+
 		defer func() {
 			if hooks == nil || user == nil || rec.status < 400 || rec.status >= 500 {
 				return
