@@ -1,0 +1,56 @@
+package ui
+
+// ConfirmModalProps configures the shared generic confirmation dialog.
+// The title, message and variant are supplied at runtime by the frontend
+// requestConfirmation() API; only the static labels are resolved by the
+// consuming application.
+type ConfirmModalProps struct {
+	ID           string
+	CancelLabel  string
+	ConfirmLabel string
+}
+
+// ConfirmModal renders a single, accessible DaisyUI dialog that is driven by
+// the Alpine.js data component registered as "confirmDialog" by
+// @frontend-common/core. It must be rendered once per page, outside of any
+// fragment that may be morphed by SSE updates.
+templ ConfirmModal(props ConfirmModalProps) {
+	{{ titleID := props.ID + "-title" }}
+	{{ messageID := props.ID + "-message" }}
+	<dialog
+		id={ props.ID }
+		class="modal"
+		x-data="confirmDialog"
+		data-default-confirm-label={ props.ConfirmLabel }
+		aria-labelledby={ titleID }
+		aria-describedby={ messageID }
+		@close="onClose()"
+	>
+		<div class="modal-box max-w-md">
+			<h3 id={ titleID } class="font-bold text-lg mb-4" x-text="title"></h3>
+			<p id={ messageID } class="py-4" x-text="message"></p>
+			<div class="modal-action">
+				<button
+					type="button"
+					class="btn"
+					x-ref="cancelButton"
+					:disabled="pending"
+					@click="cancel()"
+				>
+					{ props.CancelLabel }
+				</button>
+				<button
+					type="button"
+					class="btn"
+					:class="{ 'btn-error': variant === 'danger', 'btn-primary': variant !== 'danger' }"
+					:disabled="pending"
+					@click="confirm()"
+					x-text="confirmLabel"
+				></button>
+			</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button tabindex="-1">close</button>
+		</form>
+	</dialog>
+}
