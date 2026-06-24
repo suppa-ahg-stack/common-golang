@@ -12,11 +12,12 @@ import (
 )
 
 type fakeStore struct {
-	createFunc        func(ctx context.Context, input CreateNotificationInput) (Notification, error)
-	unreadCountFunc   func(ctx context.Context, userID int64) (int64, error)
-	listFunc          func(ctx context.Context, userID int64, opts ListOptions) ([]Notification, error)
-	markReadFunc      func(ctx context.Context, id int64, userID int64) error
-	markReadManyFunc  func(ctx context.Context, ids []int64, userID int64) error
+	createFunc       func(ctx context.Context, input CreateNotificationInput) (Notification, error)
+	unreadCountFunc  func(ctx context.Context, userID int64) (int64, error)
+	listFunc         func(ctx context.Context, userID int64, opts ListOptions) ([]Notification, error)
+	markReadFunc     func(ctx context.Context, id int64, userID int64) ([]int64, error)
+	markReadManyFunc func(ctx context.Context, ids []int64, userID int64) ([]int64, error)
+	markAllReadFunc  func(ctx context.Context, userID int64) ([]int64, error)
 }
 
 func (f *fakeStore) Create(ctx context.Context, input CreateNotificationInput) (Notification, error) {
@@ -31,15 +32,22 @@ func (f *fakeStore) List(ctx context.Context, userID int64, opts ListOptions) ([
 	return f.listFunc(ctx, userID, opts)
 }
 
-func (f *fakeStore) MarkRead(ctx context.Context, id int64, userID int64) error {
+func (f *fakeStore) MarkRead(ctx context.Context, id int64, userID int64) ([]int64, error) {
 	return f.markReadFunc(ctx, id, userID)
 }
 
-func (f *fakeStore) MarkReadMany(ctx context.Context, ids []int64, userID int64) error {
+func (f *fakeStore) MarkReadMany(ctx context.Context, ids []int64, userID int64) ([]int64, error) {
 	if f.markReadManyFunc != nil {
 		return f.markReadManyFunc(ctx, ids, userID)
 	}
-	return nil
+	return nil, nil
+}
+
+func (f *fakeStore) MarkAllRead(ctx context.Context, userID int64) ([]int64, error) {
+	if f.markAllReadFunc != nil {
+		return f.markAllReadFunc(ctx, userID)
+	}
+	return nil, nil
 }
 
 type spyPublisher struct {
@@ -198,12 +206,12 @@ func TestServiceMarkRead(t *testing.T) {
 	ctx := context.Background()
 	called := false
 	store := &fakeStore{
-		markReadFunc: func(_ context.Context, id int64, userID int64) error {
+		markReadFunc: func(_ context.Context, id int64, userID int64) ([]int64, error) {
 			called = true
 			if id != 9 || userID != 42 {
 				t.Fatalf("unexpected args: id=%d userID=%d", id, userID)
 			}
-			return nil
+			return []int64{9}, nil
 		},
 		unreadCountFunc: func(_ context.Context, userID int64) (int64, error) {
 			return 3, nil
@@ -231,16 +239,33 @@ func TestServiceMarkRead(t *testing.T) {
 	}
 }
 
+func TestServiceMarkReadAlreadyReadDoesNotPublish(t *testing.T) {
+	ctx := context.Background()
+	store := &fakeStore{
+		markReadFunc: func(_ context.Context, id int64, userID int64) ([]int64, error) {
+			return nil, nil
+		},
+	}
+	pub := &spyPublisher{}
+	svc := NewService(store, pub, testLogger())
+	if err := svc.MarkRead(ctx, 9, 42); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(pub.readEvents) != 0 {
+		t.Fatalf("expected 0 read events, got %d", len(pub.readEvents))
+	}
+}
+
 func TestServiceMarkReadMany(t *testing.T) {
 	ctx := context.Background()
 	called := false
 	store := &fakeStore{
-		markReadManyFunc: func(_ context.Context, ids []int64, userID int64) error {
+		markReadManyFunc: func(_ context.Context, ids []int64, userID int64) ([]int64, error) {
 			called = true
 			if len(ids) != 2 || ids[0] != 1 || ids[1] != 2 || userID != 42 {
 				t.Fatalf("unexpected args: ids=%v userID=%d", ids, userID)
 			}
-			return nil
+			return []int64{1}, nil
 		},
 		unreadCountFunc: func(_ context.Context, userID int64) (int64, error) {
 			return 0, nil
@@ -260,7 +285,7 @@ func TestServiceMarkReadMany(t *testing.T) {
 	if pub.readEvents[0].userID != "42" {
 		t.Fatalf("expected userID 42, got %s", pub.readEvents[0].userID)
 	}
-	if len(pub.readEvents[0].event.IDs) != 2 {
+	if len(pub.readEvents[0].event.IDs) != 1 || pub.readEvents[0].event.IDs[0] != 1 {
 		t.Fatalf("unexpected event ids: %v", pub.readEvents[0].event.IDs)
 	}
 }
@@ -275,5 +300,39 @@ func TestServiceMarkReadManyEmpty(t *testing.T) {
 	}
 	if len(pub.readEvents) != 0 {
 		t.Fatalf("expected 0 read events, got %d", len(pub.readEvents))
+	}
+}
+
+func TestServiceMarkAllRead(t *testing.T) {
+	ctx := context.Background()
+	called := false
+	store := &fakeStore{
+		markAllReadFunc: func(_ context.Context, userID int64) ([]int64, error) {
+			called = true
+			if userID != 42 {
+				t.Fatalf("expected userID 42, got %d", userID)
+			}
+			return []int64{1, 2}, nil
+		},
+		unreadCountFunc: func(_ context.Context, userID int64) (int64, error) {
+			return 0, nil
+		},
+	}
+	pub := &spyPublisher{}
+	svc := NewService(store, pub, testLogger())
+	if err := svc.MarkAllRead(ctx, 42); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !called {
+		t.Fatal("expected markAllRead to be called")
+	}
+	if len(pub.readEvents) != 1 {
+		t.Fatalf("expected 1 read event, got %d", len(pub.readEvents))
+	}
+	if pub.readEvents[0].userID != "42" {
+		t.Fatalf("expected userID 42, got %s", pub.readEvents[0].userID)
+	}
+	if len(pub.readEvents[0].event.IDs) != 2 || pub.readEvents[0].event.IDs[0] != 1 || pub.readEvents[0].event.IDs[1] != 2 {
+		t.Fatalf("unexpected event ids: %v", pub.readEvents[0].event.IDs)
 	}
 }

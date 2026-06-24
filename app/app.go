@@ -49,6 +49,22 @@ type csrf struct {
 	expiresAt time.Time
 }
 
+// GlobalFragment describes a fragment that is present on every page.
+type GlobalFragment struct {
+	ID       FragmentID
+	Selector string
+}
+
+// EmailSender is the small surface the generic application needs from an email
+// delivery implementation. The concrete *serverutil.EmailSender satisfies it,
+// and projects can provide mocks for tests or development.
+type EmailSender interface {
+	SendResetPassword(email, resetLink string) error
+	SendOtpCode(to, code string, ttlSeconds int) error
+	SendPasswordSetup(to, setupLink string, ttlHours int) error
+	IsConfigured() bool
+}
+
 type App[TConfig any, TQueries any, TSessionService any, TSseNames any] struct {
 	Config          *TConfig
 	Logger          *logger.FileLogger
@@ -59,11 +75,20 @@ type App[TConfig any, TQueries any, TSessionService any, TSseNames any] struct {
 	DomUpdateBroker *sse.Broker
 	RateLimiter     *serverutil.RateLimiter
 	SessionService  *TSessionService
-	EmailSender     *serverutil.EmailSender
+	EmailSender     EmailSender
 	Cookies         struct {
 		LangCookie *http.Cookie
 	}
-	Routes         map[string]serverutil.PageRoute
-	PageComponent  map[string]map[string]RenderableComponent
+	Routes          map[string]serverutil.PageRoute
+	PageComponent   map[string]map[string]RenderableComponent
 	FragmentPlanner *FragmentPlanner
+	GlobalFragments []GlobalFragment
+
+	// GetUserID extracts the application-level user identifier from a request.
+	// If nil or empty, the session cookie value is used as the routing key.
+	GetUserID func(r *http.Request) string
+
+	// GetActiveSessionIDsForUser returns the active session IDs for a user.
+	// The map keys are session IDs; values are ignored.
+	GetActiveSessionIDsForUser func(userID string) map[string]bool
 }

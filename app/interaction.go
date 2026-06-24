@@ -67,6 +67,8 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandler(
 			return
 		}
 
+		a.UpdateConnectionPageFromRequest(r, payload.Path)
+
 		// Route-based access control for non-action requests
 		if actionData.Action == "" {
 			route, ok := a.Routes[payload.Path]
@@ -230,6 +232,8 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandlerW
 			}
 			r = r.WithContext(ctx)
 		}
+
+		a.UpdateConnectionPageFromRequest(r, payload.Path)
 
 		user := currentUser(r)
 		if user != nil && mfaChecker != nil && !mfaChecker(r.Context(), user, actionData.Action, payload.Path) {

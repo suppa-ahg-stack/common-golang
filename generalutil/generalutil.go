@@ -23,7 +23,7 @@ func LoadEnv() error {
 	// Load environment-specific .env file
 	envFile := ".env." + *env
 	if err := godotenv.Load(envFile); err != nil {
-		fmt.Errorf("Warning: Could not load %s file", envFile)
+		log.Printf("Warning: Could not load %s file: %v", envFile, err)
 		return err
 	}
 

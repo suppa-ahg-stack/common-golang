@@ -14,8 +14,14 @@ type Store interface {
 	List(ctx context.Context, userID int64, opts ListOptions) ([]Notification, error)
 
 	// MarkRead marks a single notification as read for a user. It is idempotent.
-	MarkRead(ctx context.Context, id int64, userID int64) error
+	// It returns the notification ID only when the row was actually changed.
+	MarkRead(ctx context.Context, id int64, userID int64) ([]int64, error)
 
 	// MarkReadMany marks several notifications as read for a user. It is idempotent.
-	MarkReadMany(ctx context.Context, ids []int64, userID int64) error
+	// It returns only the notification IDs whose rows were actually changed.
+	MarkReadMany(ctx context.Context, ids []int64, userID int64) ([]int64, error)
+
+	// MarkAllRead marks every unread notification as read for a user.
+	// It returns the notification IDs whose rows were actually changed.
+	MarkAllRead(ctx context.Context, userID int64) ([]int64, error)
 }

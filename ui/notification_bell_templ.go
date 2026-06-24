@@ -19,6 +19,7 @@ type NotificationBellProps struct {
 	ListEndpoint         string
 	MarkReadEndpoint     string
 	BulkMarkReadEndpoint string
+	MarkAllReadEndpoint  string
 	InitialPageSize      int
 	FetchPageSize        int
 	HoverConsiderMs      int
@@ -28,6 +29,7 @@ type NotificationBellProps struct {
 	LoadingLabel         string
 	ErrorLabel           string
 	RefreshLabel         string
+	MarkAllReadLabel     string
 	DemoButtonLabel      string
 	AriaLabel            string
 }
@@ -62,7 +64,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 31, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 33, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -75,7 +77,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("initFromDOM('" + props.ID + "', '" + dropdownID + "')")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 34, Col: 65}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 36, Col: 65}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -88,7 +90,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.SummaryEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 35, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 37, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -101,7 +103,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ListEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 36, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 38, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -114,7 +116,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 37, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 39, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -127,195 +129,221 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.BulkMarkReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 38, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 40, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" data-initial-page-size=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" data-mark-all-read-endpoint=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.InitialPageSize))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkAllReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 39, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 41, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" data-fetch-page-size=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" data-initial-page-size=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.FetchPageSize))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.InitialPageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 40, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 42, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-hover-consider-ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" data-fetch-page-size=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.HoverConsiderMs))
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.FetchPageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 41, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 43, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" data-bulk-send-ms=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" data-hover-consider-ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.BulkSendMs))
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.HoverConsiderMs))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 42, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 44, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" data-title=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" data-bulk-send-ms=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
-		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.Title)
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.BulkSendMs))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 43, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 45, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" data-empty-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" data-title=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.EmptyLabel)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 44, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 46, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" data-loading-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" data-empty-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.LoadingLabel)
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.EmptyLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 45, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 47, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" data-error-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" data-loading-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
-		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ErrorLabel)
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.LoadingLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 46, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 48, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" data-refresh-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" data-error-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.RefreshLabel)
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ErrorLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 47, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 49, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" data-demo-button-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" data-refresh-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.DemoButtonLabel)
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.RefreshLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 48, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 50, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" data-mark-all-read-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkAllReadLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 49, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 51, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\"><button type=\"button\" class=\"btn btn-ghost btn-circle\" aria-label=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" data-demo-button-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
-		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
+		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.DemoButtonLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 54, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 52, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" aria-haspopup=\"true\" aria-expanded=\"false\" :aria-expanded=\"store.isOpen\" @click.stop=\"toggle()\"><div class=\"indicator\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9\"></path></svg> <span class=\"indicator-item badge badge-sm badge-primary\" :class=\"{ 'animate-bounce': store.unreadCount > 0 && store.badgePulse }\" x-show=\"store.unreadCount > 0\" x-text=\"store.unreadCount\"></span></div></button><div id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" data-aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
-		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(dropdownID)
+		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 73, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 53, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\" class=\"absolute top-full right-0 z-[100] card card-compact w-80 sm:w-96 bg-base-100 shadow-xl mt-2\" x-show=\"store.isOpen\" x-cloak><div class=\"card-body p-0\"><div class=\"px-4 py-3 border-b border-base-200 flex justify-between items-center\"><h3 class=\"font-bold text-base\" x-text=\"title\"></h3><button type=\"button\" class=\"btn btn-xs btn-ghost\" x-show=\"store.hasNew\" @click=\"store.refresh()\" x-text=\"refreshLabel\"></button></div><div id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "\"><button type=\"button\" class=\"btn btn-ghost btn-circle\" aria-label=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var21 string
-		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(listID)
+		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 90, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 58, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"overflow-y-auto max-h-[24rem]\" @scroll=\"onScroll()\"><div x-show=\"store.loading && store.notifications.length === 0\" class=\"p-4 text-center opacity-70\"><span class=\"loading loading-spinner loading-sm\"></span> <span class=\"ml-2\" x-text=\"loadingLabel\"></span></div><div x-show=\"store.error\" class=\"p-4 alert alert-error text-sm\" x-text=\"errorLabel\"></div><div x-show=\"!store.loading && store.notifications.length === 0\" class=\"p-8 text-center opacity-70\" x-text=\"emptyLabel\"></div><template x-for=\"n in store.notifications\" :key=\"n.id\"><div class=\"relative px-4 py-3 border-b border-base-200 hover:bg-base-200 transition-colors cursor-pointer overflow-hidden\" :class=\"{ 'bg-base-200 border-l-4 border-l-primary': !n.read, 'opacity-70': n.read }\" @pointerenter=\"onPointerEnter($event, n)\" @pointerleave=\"onPointerLeave($event, n)\" @focusin=\"onFocusIn(n)\" @focusout=\"onFocusOut(n)\" @click=\"onClick(n)\" tabindex=\"0\" role=\"listitem\" :aria-label=\"n.read ? 'read notification' : 'unread notification'\"><div class=\"flex justify-between items-start gap-2\"><div class=\"flex items-center gap-2 min-w-0\"><span x-show=\"!n.read\" class=\"w-2 h-2 rounded-full bg-primary flex-shrink-0\" aria-hidden=\"true\"></span><p class=\"text-sm truncate\" :class=\"{ 'font-bold': !n.read, 'font-normal': n.read }\" x-text=\"n.title\"></p></div><span class=\"text-xs opacity-60 whitespace-nowrap\" x-text=\"formatTime(n.created_at)\"></span></div><p class=\"text-sm mt-1\" :class=\"{ 'opacity-90': !n.read, 'opacity-70': n.read }\" x-text=\"n.body\"></p><template x-if=\"!n.read && hoveredId === n.id\"><div class=\"absolute bottom-0 left-0 h-0.5 bg-primary opacity-70 w-full\" :style=\"'animation: hover-progress ' + hoverConsiderMs + 'ms linear forwards'\"></div></template></div></template><div x-show=\"store.loading && store.notifications.length > 0\" class=\"p-3 text-center\"><span class=\"loading loading-spinner loading-xs\"></span></div></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" aria-haspopup=\"true\" aria-expanded=\"false\" :aria-expanded=\"store.isOpen\" @click.stop=\"toggle()\"><div class=\"indicator\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9\"></path></svg> <span class=\"indicator-item badge badge-sm badge-primary\" :class=\"{ 'animate-bounce': store.unreadCount > 0 && store.badgePulse }\" x-show=\"store.unreadCount > 0\" x-text=\"store.unreadCount\"></span></div></button><div id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(dropdownID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 77, Col: 18}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" class=\"absolute top-full right-0 z-[100] card card-compact w-80 sm:w-96 bg-base-100 shadow-xl mt-2\" x-show=\"store.isOpen\" x-cloak><div class=\"card-body p-0\"><div class=\"px-4 py-3 border-b border-base-200 flex justify-between items-center\"><h3 class=\"font-bold text-base\" x-text=\"title\"></h3><button type=\"button\" class=\"btn btn-xs btn-ghost\" x-show=\"store.unreadCount > 0\" @click=\"store.markAllRead()\" x-text=\"markAllReadLabel\"></button></div><div id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var23 string
+		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(listID)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 94, Col: 16}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" class=\"overflow-y-auto max-h-[24rem]\" @scroll=\"onScroll()\"><div x-show=\"store.loading && store.notifications.length === 0\" class=\"p-4 text-center opacity-70\"><span class=\"loading loading-spinner loading-sm\"></span> <span class=\"ml-2\" x-text=\"loadingLabel\"></span></div><div x-show=\"store.error\" class=\"p-4 alert alert-error text-sm\" x-text=\"errorLabel\"></div><div x-show=\"!store.loading && store.notifications.length === 0\" class=\"p-8 text-center opacity-70\" x-text=\"emptyLabel\"></div><template x-for=\"n in store.notifications\" :key=\"n.id\"><div class=\"relative px-4 py-3 border-b border-base-200 hover:bg-base-200 transition-colors cursor-pointer overflow-hidden\" :class=\"{ 'bg-base-200 border-l-4 border-l-primary': !n.read, 'opacity-70': n.read }\" @pointerenter=\"onPointerEnter($event, n)\" @pointerleave=\"onPointerLeave($event, n)\" @focusin=\"onFocusIn(n)\" @focusout=\"onFocusOut(n)\" @click=\"onClick(n)\" tabindex=\"0\" role=\"listitem\" :aria-label=\"n.read ? 'read notification' : 'unread notification'\"><div class=\"flex justify-between items-start gap-2\"><div class=\"flex items-center gap-2 min-w-0\"><span x-show=\"!n.read\" class=\"w-2 h-2 rounded-full bg-primary flex-shrink-0\" aria-hidden=\"true\"></span><p class=\"text-sm truncate\" :class=\"{ 'font-bold': !n.read, 'font-normal': n.read }\" x-text=\"n.title\"></p></div><span class=\"text-xs opacity-60 whitespace-nowrap\" x-text=\"formatTime(n.created_at)\"></span></div><p class=\"text-sm mt-1\" :class=\"{ 'opacity-90': !n.read, 'opacity-70': n.read }\" x-text=\"n.body\"></p><template x-if=\"!n.read && hoveredId === n.id\"><div class=\"absolute bottom-0 left-0 h-0.5 bg-primary opacity-70 w-full\" :style=\"'animation: hover-progress ' + hoverConsiderMs + 'ms linear forwards'\"></div></template></div></template><div x-show=\"store.loading && store.notifications.length > 0\" class=\"p-3 text-center\"><span class=\"loading loading-spinner loading-xs\"></span></div></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

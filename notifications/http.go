@@ -32,6 +32,9 @@ func RegisterHandlers(mux *http.ServeMux, deps HandlerDeps) {
 	mux.Handle("POST /notifications/read", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		HandleMarkReadMany(w, r, deps)
 	}))
+	mux.Handle("POST /notifications/read-all", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		HandleMarkAllRead(w, r, deps)
+	}))
 }
 
 // HandleSummary handles GET /notifications/summary.
@@ -170,6 +173,46 @@ func HandleMarkReadMany(w http.ResponseWriter, r *http.Request, deps HandlerDeps
 
 	if err := deps.Service.MarkReadMany(r.Context(), body.IDs, userID); err != nil {
 		internalapi.WriteError(r.Context(), w, http.StatusInternalServerError, "internal_error", "failed to mark as read")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// HandleMarkAllRead handles POST /notifications/read-all.
+func HandleMarkAllRead(w http.ResponseWriter, r *http.Request, deps HandlerDeps) {
+	userID, ok := deps.CurrentUserID(r)
+	if !ok {
+		internalapi.WriteError(r.Context(), w, http.StatusUnauthorized, "unauthorized", "user not authenticated")
+		return
+	}
+
+	sessionID, ok := deps.SessionID(r)
+	if !ok {
+		internalapi.WriteError(r.Context(), w, http.StatusUnauthorized, "unauthorized", "session not found")
+		return
+	}
+
+	var body struct {
+		Csrf string `json:"csrf"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		internalapi.WriteError(r.Context(), w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+	if body.Csrf == "" {
+		internalapi.WriteError(r.Context(), w, http.StatusBadRequest, "bad_request", "missing csrf token")
+		return
+	}
+
+	valid, err := deps.CsrfChecker(r, body.Csrf, sessionID)
+	if err != nil || !valid {
+		internalapi.WriteError(r.Context(), w, http.StatusForbidden, "forbidden", "invalid csrf token")
+		return
+	}
+
+	if err := deps.Service.MarkAllRead(r.Context(), userID); err != nil {
+		internalapi.WriteError(r.Context(), w, http.StatusInternalServerError, "internal_error", "failed to mark all as read")
 		return
 	}
 

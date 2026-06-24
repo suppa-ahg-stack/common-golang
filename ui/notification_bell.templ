@@ -7,21 +7,23 @@ import "strconv"
 // notificationCenter store registered by @frontend-common/core.
 type NotificationBellProps struct {
 	ID                string
-	SummaryEndpoint   string
-	ListEndpoint      string
-	MarkReadEndpoint  string
+	SummaryEndpoint      string
+	ListEndpoint         string
+	MarkReadEndpoint     string
 	BulkMarkReadEndpoint string
-	InitialPageSize   int
-	FetchPageSize     int
-	HoverConsiderMs   int
-	BulkSendMs        int
-	Title             string
-	EmptyLabel        string
-	LoadingLabel      string
-	ErrorLabel        string
-	RefreshLabel      string
-	DemoButtonLabel   string
-	AriaLabel         string
+	MarkAllReadEndpoint  string
+	InitialPageSize      int
+	FetchPageSize        int
+	HoverConsiderMs      int
+	BulkSendMs           int
+	Title                string
+	EmptyLabel           string
+	LoadingLabel         string
+	ErrorLabel           string
+	RefreshLabel         string
+	MarkAllReadLabel     string
+	DemoButtonLabel      string
+	AriaLabel            string
 }
 
 templ NotificationBell(props NotificationBellProps) {
@@ -36,6 +38,7 @@ templ NotificationBell(props NotificationBellProps) {
 		data-list-endpoint={ props.ListEndpoint }
 		data-mark-read-endpoint={ props.MarkReadEndpoint }
 		data-bulk-mark-read-endpoint={ props.BulkMarkReadEndpoint }
+		data-mark-all-read-endpoint={ props.MarkAllReadEndpoint }
 		data-initial-page-size={ strconv.Itoa(props.InitialPageSize) }
 		data-fetch-page-size={ strconv.Itoa(props.FetchPageSize) }
 		data-hover-consider-ms={ strconv.Itoa(props.HoverConsiderMs) }
@@ -45,6 +48,7 @@ templ NotificationBell(props NotificationBellProps) {
 		data-loading-label={ props.LoadingLabel }
 		data-error-label={ props.ErrorLabel }
 		data-refresh-label={ props.RefreshLabel }
+		data-mark-all-read-label={ props.MarkAllReadLabel }
 		data-demo-button-label={ props.DemoButtonLabel }
 		data-aria-label={ props.AriaLabel }
 	>
@@ -81,9 +85,9 @@ templ NotificationBell(props NotificationBellProps) {
 					<button
 						type="button"
 						class="btn btn-xs btn-ghost"
-						x-show="store.hasNew"
-						@click="store.refresh()"
-						x-text="refreshLabel"
+						x-show="store.unreadCount > 0"
+						@click="store.markAllRead()"
+						x-text="markAllReadLabel"
 					></button>
 				</div>
 				<div

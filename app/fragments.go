@@ -218,6 +218,22 @@ func (fp *FragmentPlanner) Plan(routeKey string, roots []FragmentID) []FragmentS
 	return planned
 }
 
+// AllFragments returns every fragment registered for a route, sorted by Order.
+func (fp *FragmentPlanner) AllFragments(routeKey string) []FragmentSpec {
+	fragments := fp.registry[routeKey]
+	planned := make([]FragmentSpec, 0, len(fragments))
+	for _, spec := range fragments {
+		planned = append(planned, spec)
+	}
+	sort.Slice(planned, func(i, j int) bool {
+		if planned[i].Order == planned[j].Order {
+			return planned[i].Selector < planned[j].Selector
+		}
+		return planned[i].Order < planned[j].Order
+	})
+	return planned
+}
+
 // FindBySelector returns the fragment registered for routeKey with the given CSS selector.
 func (fp *FragmentPlanner) FindBySelector(routeKey, selector string) (FragmentSpec, bool) {
 	fragments, ok := fp.registry[routeKey]

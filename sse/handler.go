@@ -2,13 +2,19 @@ package sse
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"suppa-ahg-stack/common-golang/logger"
+	"net/url"
+	"strconv"
 	"time"
+
+	"suppa-ahg-stack/common-golang/logger"
 )
 
+// HandlerOptions configures the SSE handler behaviour.
+// SseEventOpts is a concrete EventHandler implementation.
 type SseEventOpts struct {
 	HeartbeatInterval   time.Duration
 	OnConnectHandler    func(*http.Request)
@@ -18,7 +24,6 @@ type SseEventOpts struct {
 	Name                string
 }
 
-// HandlerOptions configures the SSE handler behaviour.
 type HandlerOptions struct {
 	// HeartbeatInterval sends a comment ping to keep connections alive.
 	// Zero disables it.
@@ -33,6 +38,10 @@ type HandlerOptions struct {
 	// UserIDExtractor returns the application-level user identifier to use for
 	// routing events. If nil or empty, the session cookie value is used.
 	UserIDExtractor func(r *http.Request) string
+
+	// PageResolver returns the selectors and fragment IDs present on the given page.
+	// If nil, the connection starts with no known page context.
+	PageResolver func(page string) (selectors, fragmentIDs map[string]bool)
 }
 
 // Handler returns an http.HandlerFunc that streams typed SSE events.
@@ -68,15 +77,29 @@ func Handler(sseEvents *SseEvents, sessionName string, opts HandlerOptions, logg
 			return
 		}
 
-		userID := cookie.Value
+		sessionID := cookie.Value
+		userID := sessionID
 		if opts.UserIDExtractor != nil {
 			if extracted := opts.UserIDExtractor(r); extracted != "" {
 				userID = extracted
 			}
 		}
 
-		for _, sseEvent := range sseEvents.Events {
-			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context(), userID)
+		var connID uint64
+		var cleanup context.CancelFunc
+
+		for i, sseEvent := range sseEvents.Events {
+			var events <-chan Event
+			broker := sseEvent.GetBroker()
+			if i == 0 {
+				connID, events, cleanup = broker.SubscribeWithIDs(r.Context(), sessionID, userID)
+			} else {
+				// All event streams for a single HTTP connection share the same
+				// connection identifier, so page-context updates and per-connection
+				// publishing always target the same client regardless of which broker
+				// owns a given event type.
+				events, cleanup = broker.SubscribeWithConnectionID(r.Context(), sessionID, userID, connID)
+			}
 
 			sseEvent.OnConnect(r)
 
@@ -112,6 +135,36 @@ func Handler(sseEvents *SseEvents, sessionName string, opts HandlerOptions, logg
 			}(events)
 		}
 
+		primaryBroker := sseEvents.Events[0].GetBroker()
+
+		// Set initial page context from Referer on every registered broker so that
+		// the broker used for DOM updates (e.g. app.DomUpdateBroker) has the same
+		// routing metadata as the primary broker.
+		if opts.PageResolver != nil {
+			page := pageFromReferer(r)
+			if page != "" {
+				selectors, fragmentIDs := opts.PageResolver(page)
+				for _, sseEvent := range sseEvents.Events {
+					sseEvent.GetBroker().UpdateConnectionPage(connID, page, selectors, fragmentIDs)
+				}
+			}
+		}
+
+		// Send connection ID to the client so it can identify itself in /unh and /uih.
+		connPayload, err := json.Marshal(map[string]any{
+			"kind": "data",
+			"name": "system.connection_id",
+			"data": map[string]any{
+				"connection_id": strconv.FormatUint(connID, 10),
+			},
+		})
+		if err == nil {
+			primaryBroker.PublishToConnection(connID, Event{
+				Type: "app-event",
+				Data: connPayload,
+			})
+		}
+
 		if minHeartbeat > 0 {
 			ticker = time.NewTicker(minHeartbeat)
 			defer ticker.Stop()
@@ -138,6 +191,18 @@ func Handler(sseEvents *SseEvents, sessionName string, opts HandlerOptions, logg
 			}
 		}
 	}
+}
+
+func pageFromReferer(r *http.Request) string {
+	referer := r.Header.Get("Referer")
+	if referer == "" {
+		return ""
+	}
+	u, err := url.Parse(referer)
+	if err != nil {
+		return ""
+	}
+	return u.Path
 }
 
 // writeEvent serialises a typed Event to the SSE wire format.

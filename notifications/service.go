@@ -33,7 +33,7 @@ func NewService(store Store, publisher Publisher, l *logger.FileLogger) *Service
 }
 
 // Create creates a notification for a user and publishes a notification-created event
-// to the session identified by sessionID.
+// to the active sessions of the target user.
 func (s *Service) Create(ctx context.Context, sessionID string, input CreateNotificationInput) (Notification, error) {
 	n, err := s.store.Create(ctx, input)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Service) Create(ctx context.Context, sessionID string, input CreateNoti
 
 	if s.publisher != nil {
 		if err := s.publisher.PublishNotificationCreated(ctx, strconv.FormatInt(input.UserID, 10), event); err != nil {
-			s.l.Error(fmt.Sprintf("failed to publish notification-created: %v", err))
+			s.l.Error(fmt.Sprintf("failed to publish notifications.created: %v", err))
 		}
 	}
 
@@ -94,10 +94,11 @@ func (s *Service) UnreadCount(ctx context.Context, userID int64) (NotificationSu
 
 // MarkRead marks a notification as read for a user and broadcasts the update.
 func (s *Service) MarkRead(ctx context.Context, id int64, userID int64) error {
-	if err := s.store.MarkRead(ctx, id, userID); err != nil {
+	changedIDs, err := s.store.MarkRead(ctx, id, userID)
+	if err != nil {
 		return fmt.Errorf("mark read: %w", err)
 	}
-	s.broadcastRead(ctx, []int64{id}, userID)
+	s.broadcastRead(ctx, changedIDs, userID)
 	return nil
 }
 
@@ -106,14 +107,29 @@ func (s *Service) MarkReadMany(ctx context.Context, ids []int64, userID int64) e
 	if len(ids) == 0 {
 		return nil
 	}
-	if err := s.store.MarkReadMany(ctx, ids, userID); err != nil {
+	changedIDs, err := s.store.MarkReadMany(ctx, ids, userID)
+	if err != nil {
 		return fmt.Errorf("mark read many: %w", err)
 	}
-	s.broadcastRead(ctx, ids, userID)
+	s.broadcastRead(ctx, changedIDs, userID)
+	return nil
+}
+
+// MarkAllRead marks every unread notification as read for a user and broadcasts the update.
+func (s *Service) MarkAllRead(ctx context.Context, userID int64) error {
+	changedIDs, err := s.store.MarkAllRead(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("mark all read: %w", err)
+	}
+	s.broadcastRead(ctx, changedIDs, userID)
 	return nil
 }
 
 func (s *Service) broadcastRead(ctx context.Context, ids []int64, userID int64) {
+	if len(ids) == 0 {
+		return
+	}
+
 	unread, err := s.store.UnreadCount(ctx, userID)
 	if err != nil {
 		s.l.Error(fmt.Sprintf("failed to compute unread count after mark read, skipping SSE broadcast: %v", err))
@@ -127,7 +143,7 @@ func (s *Service) broadcastRead(ctx context.Context, ids []int64, userID int64) 
 
 	if s.publisher != nil {
 		if err := s.publisher.PublishNotificationRead(ctx, strconv.FormatInt(userID, 10), event); err != nil {
-			s.l.Error(fmt.Sprintf("failed to publish notification-read: %v", err))
+			s.l.Error(fmt.Sprintf("failed to publish notifications.read: %v", err))
 		}
 	}
 }

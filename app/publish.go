@@ -7,23 +7,40 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/invopop/ctxi18n"
 	"suppa-ahg-stack/common-golang/serverutil"
 	"suppa-ahg-stack/common-golang/sse"
 )
 
+// SseConnectionIDHeader is the header used by the client to report its current
+// SSE connection identifier.
+const SseConnectionIDHeader = "X-SSE-Connection-ID"
+
+// FragmentSSEPayload is the wire payload for a fragment update.
+type FragmentSSEPayload struct {
+	Kind     string `json:"kind"`
+	Name     string `json:"name"`
+	Selector string `json:"selector"`
+	HTML     string `json:"html"`
+	Swap     string `json:"swap"`
+	Path     string `json:"path,omitempty"`
+}
+
+// DataSSEPayload is the wire payload for a business/UI event.
+type DataSSEPayload struct {
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	FragmentID string `json:"fragment_id,omitempty"`
+	Data       any    `json:"data"`
+}
+
+// ConfigWithSession exposes session and locale configuration.
 type ConfigWithSession interface {
 	GetLangCookieName() string
 	GetAppDefaultLang() string
 	GetSessionName() string
-}
-
-type NavUpdateEvent struct {
-	Selector string `json:"selector"`
-	HTML     string `json:"html"`
-	Path     string `json:"path"`
-	Swap     string `json:"swap"`
 }
 
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) getConfig() ConfigWithSession {
@@ -32,6 +49,78 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) getConfig() ConfigW
 		panic(fmt.Sprintf("Config type %T does not implement ConfigWithSession", a.Config))
 	}
 	return cfg
+}
+
+// targetUserID returns the user-level routing key for a request.
+// Authenticated users are identified by their application user ID;
+// anonymous users fall back to their session cookie value.
+func (a *App[TConfig, TQueries, TSessionService, TSseNames]) targetUserID(r *http.Request) string {
+	if a.GetUserID != nil {
+		if userID := a.GetUserID(r); userID != "" {
+			return userID
+		}
+	}
+	cfg := a.getConfig()
+	cookie, err := r.Cookie(cfg.GetSessionName())
+	if err == nil && cookie != nil {
+		return cookie.Value
+	}
+	return ""
+}
+
+func (a *App[TConfig, TQueries, TSessionService, TSseNames]) activeSessionIDs(userID string) map[string]bool {
+	if a.GetActiveSessionIDsForUser != nil {
+		return a.GetActiveSessionIDsForUser(userID)
+	}
+	return nil
+}
+
+// UpdateConnectionPageFromRequest updates the page context for the SSE
+// connection identified by the X-SSE-Connection-ID header, if present and valid.
+func (a *App[TConfig, TQueries, TSessionService, TSseNames]) UpdateConnectionPageFromRequest(r *http.Request, path string) {
+	header := r.Header.Get(SseConnectionIDHeader)
+	if header == "" {
+		return
+	}
+
+	connID, err := strconv.ParseUint(header, 10, 64)
+	if err != nil {
+		return
+	}
+
+	selectors, fragmentIDs := a.FragmentsForPage(path)
+	a.DomUpdateBroker.UpdateConnectionPage(connID, path, selectors, fragmentIDs)
+}
+
+// FragmentsForPage returns the selectors and fragment IDs present on the given page.
+func (a *App[TConfig, TQueries, TSessionService, TSseNames]) FragmentsForPage(path string) (selectors, fragmentIDs map[string]bool) {
+	selectors = make(map[string]bool)
+	fragmentIDs = make(map[string]bool)
+
+	routeKey, _, ok := MatchRoute(a.Routes, path)
+	if ok && a.FragmentPlanner != nil {
+		for _, fragment := range a.FragmentPlanner.AllFragments(routeKey) {
+			selectors[fragment.Selector] = true
+			fragmentIDs[string(fragment.ID)] = true
+		}
+	} else {
+		selectors["#page-content"] = true
+	}
+
+	for _, gf := range a.GlobalFragments {
+		selectors[gf.Selector] = true
+		fragmentIDs[string(gf.ID)] = true
+	}
+
+	return selectors, fragmentIDs
+}
+
+func (a *App[TConfig, TQueries, TSessionService, TSseNames]) publishEvent(userID string, event sse.Event, active map[string]bool, filter func(*sse.Connection) bool) {
+	opts := &sse.PublishOptions{
+		ActiveSessionIDs: active,
+		Filter:           filter,
+	}
+	a.DomUpdateBroker.PublishToUserWithOptions(userID, event, opts)
 }
 
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragmentForPath(path string, selector string, r *http.Request) {
@@ -70,27 +159,7 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragmentForP
 		return
 	}
 
-	cookie, err := r.Cookie(cfg.GetSessionName())
-	sessionID := ""
-	if err == nil {
-		sessionID = cookie.Value
-	}
-
-	eventData, err := json.Marshal(NavUpdateEvent{
-		Selector: targetSelector,
-		HTML:     buf.String(),
-		Path:     path,
-		Swap:     "morph",
-	})
-	if err != nil {
-		a.Logger.Error(fmt.Sprintf("Failed to marshal nav event: %v", err))
-		return
-	}
-
-	a.DomUpdateBroker.PublishToUser(sessionID, sse.Event{
-		Type: "dom-update",
-		Data: eventData,
-	})
+	a.PublishDomUpdate(path, targetSelector, buf.String(), r)
 
 	for sel, component := range a.PageComponent[path] {
 		if sel == targetSelector || !component.IsLayoutComponent() {
@@ -136,104 +205,103 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragment(pat
 		return
 	}
 
-	cookie, err := r.Cookie(cfg.GetSessionName())
-	sessionID := ""
-	if err == nil {
-		sessionID = cookie.Value
-	}
-
-	eventData, err := json.Marshal(NavUpdateEvent{
-		Selector: targetSelector,
-		HTML:     buf.String(),
-		Path:     path,
-		Swap:     "morph",
-	})
-	if err != nil {
-		a.Logger.Error(fmt.Sprintf("Failed to marshal nav event: %v", err))
-		return
-	}
-
-	a.DomUpdateBroker.PublishToUser(sessionID, sse.Event{
-		Type: "dom-update",
-		Data: eventData,
-	})
+	a.PublishDomUpdate(path, targetSelector, buf.String(), r)
 }
 
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishToast(message string, toastType string, duration int, r *http.Request) {
-	cfg := a.getConfig()
-	cookie, err := r.Cookie(cfg.GetSessionName())
-	sessionID := ""
-	if err == nil {
-		sessionID = cookie.Value
+	userID := a.targetUserID(r)
+	if userID == "" {
+		return
 	}
 
-	eventData, err := json.Marshal(map[string]any{
-		"message":  message,
-		"type":     toastType,
-		"duration": duration,
-	})
+	payload := DataSSEPayload{
+		Kind:       "data",
+		Name:       "ui.toast",
+		FragmentID: "toast-container",
+		Data: map[string]any{
+			"message":  message,
+			"type":     toastType,
+			"duration": duration,
+			"scope":    "global",
+		},
+	}
+
+	eventData, err := json.Marshal(payload)
 	if err != nil {
 		a.Logger.Error(fmt.Sprintf("Failed to marshal toast event: %v", err))
 		return
 	}
 
-	a.DomUpdateBroker.PublishToUser(sessionID, sse.Event{
-		Type: "toast",
-		Data: eventData,
+	active := a.activeSessionIDs(userID)
+	a.publishEvent(userID, sse.Event{Type: "app-event", Data: eventData}, active, func(conn *sse.Connection) bool {
+		if !conn.HasPageContext() {
+			return true
+		}
+		_, _, fragmentIDs := conn.PageContext()
+		return fragmentIDs[payload.FragmentID]
 	})
 }
 
-// PublishDomUpdate sends a single dom-update SSE event to the current user's stream.
+// PublishDomUpdate sends a single fragment SSE event to the current user's stream.
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishDomUpdate(rawPath, selector, html string, r *http.Request) bool {
-	cfg := a.getConfig()
-	cookie, err := r.Cookie(cfg.GetSessionName())
-	sessionID := ""
-	if err == nil {
-		sessionID = cookie.Value
+	userID := a.targetUserID(r)
+	if userID == "" {
+		return false
 	}
 
-	eventData, err := json.Marshal(NavUpdateEvent{
+	payload := FragmentSSEPayload{
+		Kind:     "fragment",
+		Name:     "ui.fragment",
 		Selector: selector,
 		HTML:     html,
 		Path:     rawPath,
 		Swap:     "morph",
-	})
+	}
+
+	eventData, err := json.Marshal(payload)
 	if err != nil {
 		a.Logger.Error(fmt.Sprintf("Failed to marshal nav event: %v", err))
 		return false
 	}
 
-	a.DomUpdateBroker.PublishToUser(sessionID, sse.Event{
-		Type: "dom-update",
-		Data: eventData,
+	active := a.activeSessionIDs(userID)
+	a.publishEvent(userID, sse.Event{Type: "app-event", Data: eventData}, active, func(conn *sse.Connection) bool {
+		if !conn.HasPageContext() {
+			return true
+		}
+		_, selectors, _ := conn.PageContext()
+		return selectors[selector]
 	})
 	return true
 }
 
 // PublishModalToast sends a toast event scoped to a modal container.
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishModalToast(message, toastType, duration, modalID string, r *http.Request) {
-	cfg := a.getConfig()
-	cookie, err := r.Cookie(cfg.GetSessionName())
-	sessionID := ""
-	if err == nil {
-		sessionID = cookie.Value
+	userID := a.targetUserID(r)
+	if userID == "" {
+		return
 	}
 
-	eventData, err := json.Marshal(map[string]any{
-		"message":  message,
-		"type":     toastType,
-		"duration": duration,
-		"modal_id": modalID,
-	})
+	payload := DataSSEPayload{
+		Kind: "data",
+		Name: "ui.toast",
+		Data: map[string]any{
+			"message":  message,
+			"type":     toastType,
+			"duration": duration,
+			"scope":    "modal",
+			"modal_id": modalID,
+		},
+	}
+
+	eventData, err := json.Marshal(payload)
 	if err != nil {
 		a.Logger.Error(fmt.Sprintf("Failed to marshal modal toast event: %v", err))
 		return
 	}
 
-	a.DomUpdateBroker.PublishToUser(sessionID, sse.Event{
-		Type: "modal-toast",
-		Data: eventData,
-	})
+	active := a.activeSessionIDs(userID)
+	a.publishEvent(userID, sse.Event{Type: "app-event", Data: eventData}, active, nil)
 }
 
 // PublishFragmentScope renders and publishes a planned set of fragments for rawPath.

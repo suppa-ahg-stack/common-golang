@@ -37,6 +37,7 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) NavigationHandler(a
 			r = r.WithContext(ctx)
 		}
 
+		a.UpdateConnectionPageFromRequest(r, path)
 		a.PublishFragmentForPath(path, route.TargetSelector, r)
 		w.WriteHeader(http.StatusAccepted)
 	}
@@ -79,6 +80,7 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) NavigationHandlerWi
 			publishPath = u.Path + "/"
 		}
 
+		a.UpdateConnectionPageFromRequest(r, publishPath)
 		a.PublishFragmentScope(publishPath, RootsForPolicy(RefreshPageAndNavbar), r)
 		w.WriteHeader(http.StatusAccepted)
 	}
