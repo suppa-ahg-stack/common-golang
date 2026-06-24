@@ -43,17 +43,29 @@ func (f *fakeStore) MarkReadMany(ctx context.Context, ids []int64, userID int64)
 }
 
 type spyPublisher struct {
-	published []struct {
-		sessionID string
-		event     NotificationCreatedEvent
+	createdEvents []struct {
+		userID string
+		event  NotificationCreatedEvent
+	}
+	readEvents []struct {
+		userID string
+		event  NotificationReadEvent
 	}
 }
 
-func (p *spyPublisher) PublishNotificationCreated(ctx context.Context, sessionID string, event NotificationCreatedEvent) error {
-	p.published = append(p.published, struct {
-		sessionID string
-		event     NotificationCreatedEvent
-	}{sessionID: sessionID, event: event})
+func (p *spyPublisher) PublishNotificationCreated(ctx context.Context, userID string, event NotificationCreatedEvent) error {
+	p.createdEvents = append(p.createdEvents, struct {
+		userID string
+		event  NotificationCreatedEvent
+	}{userID: userID, event: event})
+	return nil
+}
+
+func (p *spyPublisher) PublishNotificationRead(ctx context.Context, userID string, event NotificationReadEvent) error {
+	p.readEvents = append(p.readEvents, struct {
+		userID string
+		event  NotificationReadEvent
+	}{userID: userID, event: event})
 	return nil
 }
 
@@ -84,14 +96,14 @@ func TestServiceCreate(t *testing.T) {
 	if n.ID != created.ID {
 		t.Fatalf("expected id %d, got %d", created.ID, n.ID)
 	}
-	if len(pub.published) != 1 {
-		t.Fatalf("expected 1 published event, got %d", len(pub.published))
+	if len(pub.createdEvents) != 1 {
+		t.Fatalf("expected 1 published event, got %d", len(pub.createdEvents))
 	}
-	if pub.published[0].sessionID != "session-token" {
-		t.Fatalf("expected sessionID session-token, got %s", pub.published[0].sessionID)
+	if pub.createdEvents[0].userID != "42" {
+		t.Fatalf("expected userID 42, got %s", pub.createdEvents[0].userID)
 	}
-	if pub.published[0].event.UnreadCount != 5 {
-		t.Fatalf("expected unread count 5, got %d", pub.published[0].event.UnreadCount)
+	if pub.createdEvents[0].event.UnreadCount != 5 {
+		t.Fatalf("expected unread count 5, got %d", pub.createdEvents[0].event.UnreadCount)
 	}
 }
 
@@ -193,13 +205,29 @@ func TestServiceMarkRead(t *testing.T) {
 			}
 			return nil
 		},
+		unreadCountFunc: func(_ context.Context, userID int64) (int64, error) {
+			return 3, nil
+		},
 	}
-	svc := NewService(store, &NoopPublisher{}, testLogger())
+	pub := &spyPublisher{}
+	svc := NewService(store, pub, testLogger())
 	if err := svc.MarkRead(ctx, 9, 42); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !called {
 		t.Fatal("expected markRead to be called")
+	}
+	if len(pub.readEvents) != 1 {
+		t.Fatalf("expected 1 read event, got %d", len(pub.readEvents))
+	}
+	if pub.readEvents[0].userID != "42" {
+		t.Fatalf("expected userID 42, got %s", pub.readEvents[0].userID)
+	}
+	if len(pub.readEvents[0].event.IDs) != 1 || pub.readEvents[0].event.IDs[0] != 9 {
+		t.Fatalf("unexpected event ids: %v", pub.readEvents[0].event.IDs)
+	}
+	if pub.readEvents[0].event.UnreadCount != 3 {
+		t.Fatalf("expected unread count 3, got %d", pub.readEvents[0].event.UnreadCount)
 	}
 }
 
@@ -214,21 +242,38 @@ func TestServiceMarkReadMany(t *testing.T) {
 			}
 			return nil
 		},
+		unreadCountFunc: func(_ context.Context, userID int64) (int64, error) {
+			return 0, nil
+		},
 	}
-	svc := NewService(store, &NoopPublisher{}, testLogger())
+	pub := &spyPublisher{}
+	svc := NewService(store, pub, testLogger())
 	if err := svc.MarkReadMany(ctx, []int64{1, 2}, 42); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !called {
 		t.Fatal("expected markReadMany to be called")
 	}
+	if len(pub.readEvents) != 1 {
+		t.Fatalf("expected 1 read event, got %d", len(pub.readEvents))
+	}
+	if pub.readEvents[0].userID != "42" {
+		t.Fatalf("expected userID 42, got %s", pub.readEvents[0].userID)
+	}
+	if len(pub.readEvents[0].event.IDs) != 2 {
+		t.Fatalf("unexpected event ids: %v", pub.readEvents[0].event.IDs)
+	}
 }
 
 func TestServiceMarkReadManyEmpty(t *testing.T) {
 	ctx := context.Background()
 	store := &fakeStore{}
-	svc := NewService(store, &NoopPublisher{}, testLogger())
+	pub := &spyPublisher{}
+	svc := NewService(store, pub, testLogger())
 	if err := svc.MarkReadMany(ctx, []int64{}, 42); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(pub.readEvents) != 0 {
+		t.Fatalf("expected 0 read events, got %d", len(pub.readEvents))
 	}
 }

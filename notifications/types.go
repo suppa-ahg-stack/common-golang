@@ -49,3 +49,9 @@ type NotificationCreatedEvent struct {
 	Body        string `json:"body"`
 	UnreadCount int64  `json:"unread_count"`
 }
+
+// NotificationReadEvent is the SSE payload sent when notifications are marked as read.
+type NotificationReadEvent struct {
+	IDs         []int64 `json:"ids"`
+	UnreadCount int64   `json:"unread_count"`
+}

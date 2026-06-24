@@ -100,7 +100,7 @@ templ NotificationBell(props NotificationBellProps) {
 					<template x-for="n in store.notifications" :key="n.id">
 						<div
 							class="relative px-4 py-3 border-b border-base-200 hover:bg-base-200 transition-colors cursor-pointer overflow-hidden"
-							:class="{ 'bg-base-200/50': !n.read }"
+							:class="{ 'bg-base-200 border-l-4 border-l-primary': !n.read, 'opacity-70': n.read }"
 							@pointerenter="onPointerEnter($event, n)"
 							@pointerleave="onPointerLeave($event, n)"
 							@focusin="onFocusIn(n)"
@@ -111,10 +111,13 @@ templ NotificationBell(props NotificationBellProps) {
 							:aria-label="n.read ? 'read notification' : 'unread notification'"
 						>
 							<div class="flex justify-between items-start gap-2">
-								<p class="font-semibold text-sm" x-text="n.title"></p>
+								<div class="flex items-center gap-2 min-w-0">
+									<span x-show="!n.read" class="w-2 h-2 rounded-full bg-primary flex-shrink-0" aria-hidden="true"></span>
+									<p class="text-sm truncate" :class="{ 'font-bold': !n.read, 'font-normal': n.read }" x-text="n.title"></p>
+								</div>
 								<span class="text-xs opacity-60 whitespace-nowrap" x-text="formatTime(n.created_at)"></span>
 							</div>
-							<p class="text-sm opacity-80 mt-1" x-text="n.body"></p>
+							<p class="text-sm mt-1" :class="{ 'opacity-90': !n.read, 'opacity-70': n.read }" x-text="n.body"></p>
 							<template x-if="!n.read && hoveredId === n.id">
 								<div
 									class="absolute bottom-0 left-0 h-0.5 bg-primary opacity-70 w-full"

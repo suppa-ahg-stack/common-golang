@@ -29,10 +29,14 @@ type HandlerOptions struct {
 
 	// OnDisconnect is called when a client disconnects (or context is cancelled).
 	OnDisconnect func(r *http.Request)
+
+	// UserIDExtractor returns the application-level user identifier to use for
+	// routing events. If nil or empty, the session cookie value is used.
+	UserIDExtractor func(r *http.Request) string
 }
 
 // Handler returns an http.HandlerFunc that streams typed SSE events.
-func Handler(sseEvents *SseEvents, sessionName string, logger *logger.FileLogger) http.HandlerFunc {
+func Handler(sseEvents *SseEvents, sessionName string, opts HandlerOptions, logger *logger.FileLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// SSE requires a flushing ResponseWriter.
 		flusher, ok := w.(http.Flusher)
@@ -64,8 +68,15 @@ func Handler(sseEvents *SseEvents, sessionName string, logger *logger.FileLogger
 			return
 		}
 
+		userID := cookie.Value
+		if opts.UserIDExtractor != nil {
+			if extracted := opts.UserIDExtractor(r); extracted != "" {
+				userID = extracted
+			}
+		}
+
 		for _, sseEvent := range sseEvents.Events {
-			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context(), cookie.Value)
+			_, events, cleanup := sseEvent.GetBroker().Subscribe(r.Context(), userID)
 
 			sseEvent.OnConnect(r)
 

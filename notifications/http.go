@@ -182,3 +182,7 @@ type NoopPublisher struct{}
 func (NoopPublisher) PublishNotificationCreated(_ context.Context, _ string, _ NotificationCreatedEvent) error {
 	return nil
 }
+
+func (NoopPublisher) PublishNotificationRead(_ context.Context, _ string, _ NotificationReadEvent) error {
+	return nil
+}

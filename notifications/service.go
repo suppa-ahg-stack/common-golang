@@ -3,15 +3,17 @@ package notifications
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"suppa-ahg-stack/common-golang/logger"
 )
 
-// Publisher sends notification-created events to clients.
-// In auth_app this is implemented with the SSE broker keyed by session cookie.
+// Publisher sends notification events to clients.
+// In auth_app this is implemented with the SSE broker keyed by user ID.
 type Publisher interface {
-	PublishNotificationCreated(ctx context.Context, sessionID string, event NotificationCreatedEvent) error
+	PublishNotificationCreated(ctx context.Context, userID string, event NotificationCreatedEvent) error
+	PublishNotificationRead(ctx context.Context, userID string, event NotificationReadEvent) error
 }
 
 // Service is the application service for notifications.
@@ -53,7 +55,7 @@ func (s *Service) Create(ctx context.Context, sessionID string, input CreateNoti
 	}
 
 	if s.publisher != nil {
-		if err := s.publisher.PublishNotificationCreated(ctx, sessionID, event); err != nil {
+		if err := s.publisher.PublishNotificationCreated(ctx, strconv.FormatInt(input.UserID, 10), event); err != nil {
 			s.l.Error(fmt.Sprintf("failed to publish notification-created: %v", err))
 		}
 	}
@@ -90,15 +92,16 @@ func (s *Service) UnreadCount(ctx context.Context, userID int64) (NotificationSu
 	return NotificationSummary{UnreadCount: count}, nil
 }
 
-// MarkRead marks a notification as read for a user.
+// MarkRead marks a notification as read for a user and broadcasts the update.
 func (s *Service) MarkRead(ctx context.Context, id int64, userID int64) error {
 	if err := s.store.MarkRead(ctx, id, userID); err != nil {
 		return fmt.Errorf("mark read: %w", err)
 	}
+	s.broadcastRead(ctx, []int64{id}, userID)
 	return nil
 }
 
-// MarkReadMany marks multiple notifications as read for a user.
+// MarkReadMany marks multiple notifications as read for a user and broadcasts the update.
 func (s *Service) MarkReadMany(ctx context.Context, ids []int64, userID int64) error {
 	if len(ids) == 0 {
 		return nil
@@ -106,5 +109,25 @@ func (s *Service) MarkReadMany(ctx context.Context, ids []int64, userID int64) e
 	if err := s.store.MarkReadMany(ctx, ids, userID); err != nil {
 		return fmt.Errorf("mark read many: %w", err)
 	}
+	s.broadcastRead(ctx, ids, userID)
 	return nil
+}
+
+func (s *Service) broadcastRead(ctx context.Context, ids []int64, userID int64) {
+	unread, err := s.store.UnreadCount(ctx, userID)
+	if err != nil {
+		s.l.Error(fmt.Sprintf("failed to compute unread count after mark read, skipping SSE broadcast: %v", err))
+		return
+	}
+
+	event := NotificationReadEvent{
+		IDs:         ids,
+		UnreadCount: unread,
+	}
+
+	if s.publisher != nil {
+		if err := s.publisher.PublishNotificationRead(ctx, strconv.FormatInt(userID, 10), event); err != nil {
+			s.l.Error(fmt.Sprintf("failed to publish notification-read: %v", err))
+		}
+	}
 }
