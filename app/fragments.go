@@ -34,6 +34,7 @@ type FragmentInput struct {
 	UserID         int64
 	OrganisationID int64
 	ContainerID    string
+	Extra          map[string]any
 }
 
 type fragmentInputKey struct{}

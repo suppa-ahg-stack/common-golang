@@ -1,0 +1,214 @@
+package ui
+
+import (
+	"encoding/json"
+	"strconv"
+)
+
+// SearchableSelectOption represents a single selectable item.
+type SearchableSelectOption struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+}
+
+// SearchableSelectProps configures the shared combobox-style search select.
+//
+// Dynamic mode:
+//   - Set SearchAction to the /uih action name (e.g. "search-organisation-options").
+//   - Set ResultSelector to the selector of the result container. When
+//     ResponseMode is "sse" the server will morph that container via SSE. When
+//     ResponseMode is "html" the server is expected to return the result HTML
+//     directly in the /uih response body and the component injects it into the
+//     container itself.
+//   - Use ExtraPayload to send fixed context values (e.g. the current record id
+//     to exclude from search results).
+//   - Result items should dispatch a `searchable-select-pick` CustomEvent with
+//     detail {id, label}.
+//
+// Static mode:
+//   - Leave SearchAction empty and populate StaticOptions.
+//   - The component filters StaticOptions locally and renders the list itself.
+//
+// Selection value:
+//   - Single select: the hidden input value is the selected item id.
+//   - Multi select: the hidden input value is a JSON array of selected ids.
+//     Callers that need multi-select values must parse the JSON server-side.
+type SearchableSelectProps struct {
+	ID              string
+	Name            string
+	Label           string
+	Placeholder     string
+	SearchAction    string
+	SearchParamName string
+	ResultSelector  string
+	ResponseMode    string // "sse" (default) or "html"
+	ExtraPayload    map[string]string
+	MinSearchLength int
+	DebounceMs      int
+	MaxVisibleItems int
+	MaxItems        int
+	MultiSelect     bool
+	StaticOptions   []SearchableSelectOption
+	Selected        []SearchableSelectOption
+	NoResultsLabel  string
+	ClearLabel      string
+}
+
+func (p SearchableSelectProps) searchParamName() string {
+	if p.SearchParamName != "" {
+		return p.SearchParamName
+	}
+	return "search"
+}
+
+func (p SearchableSelectProps) minSearchLength() string {
+	if p.MinSearchLength > 0 {
+		return strconv.Itoa(p.MinSearchLength)
+	}
+	return "1"
+}
+
+func (p SearchableSelectProps) debounceMs() string {
+	if p.DebounceMs > 0 {
+		return strconv.Itoa(p.DebounceMs)
+	}
+	return "200"
+}
+
+func (p SearchableSelectProps) maxVisibleItems() string {
+	if p.MaxVisibleItems > 0 {
+		return strconv.Itoa(p.MaxVisibleItems)
+	}
+	return "10"
+}
+
+func (p SearchableSelectProps) maxItems() string {
+	if p.MaxItems > 0 {
+		return strconv.Itoa(p.MaxItems)
+	}
+	return "20"
+}
+
+func (p SearchableSelectProps) responseMode() string {
+	if p.ResponseMode == "html" {
+		return "html"
+	}
+	return "sse"
+}
+
+func (p SearchableSelectProps) extraPayloadJSON() string {
+	if len(p.ExtraPayload) == 0 {
+		return "{}"
+	}
+	b, err := json.Marshal(p.ExtraPayload)
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}
+
+func (p SearchableSelectProps) staticOptionsJSON() string {
+	if len(p.StaticOptions) == 0 {
+		return "[]"
+	}
+	b, err := json.Marshal(p.StaticOptions)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+func (p SearchableSelectProps) selectedJSON() string {
+	if len(p.Selected) == 0 {
+		return "[]"
+	}
+	b, err := json.Marshal(p.Selected)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+func (p SearchableSelectProps) resultID() string {
+	if len(p.ResultSelector) > 0 && p.ResultSelector[0] == '#' {
+		return p.ResultSelector[1:]
+	}
+	return p.ResultSelector
+}
+
+// SearchableSelect renders a searchable input with an optional dropdown.
+//
+// For single select, the hidden input value is the selected id.
+// For multi select, the hidden input value is a JSON array of selected ids.
+templ SearchableSelect(props SearchableSelectProps) {
+	<div
+		class="relative w-full"
+		id={ props.ID }
+		x-data="searchableSelect"
+		data-name={ props.Name }
+		data-search-action={ props.SearchAction }
+		data-search-param-name={ props.searchParamName() }
+		data-result-selector={ props.ResultSelector }
+		data-min-search-length={ props.minSearchLength() }
+		data-debounce-ms={ props.debounceMs() }
+		data-max-visible-items={ props.maxVisibleItems() }
+		data-max-items={ props.maxItems() }
+		data-response-mode={ props.responseMode() }
+		data-extra-payload={ props.extraPayloadJSON() }
+		data-multiselect={ strconv.FormatBool(props.MultiSelect) }
+		data-static-options={ props.staticOptionsJSON() }
+		data-selected={ props.selectedJSON() }
+		data-no-results-label={ props.NoResultsLabel }
+		data-clear-label={ props.ClearLabel }
+	>
+		<label class="label" for={ props.ID + "-input" }>{ props.Label }</label>
+		if props.MultiSelect {
+			<div class="flex flex-wrap gap-1 mb-1 min-h-[1.5rem]" x-show="selected.length > 0" x-cloak>
+				<template x-for="item in selected" :key="item.id">
+					<span class="badge badge-outline gap-1">
+						<span x-text="item.label"></span>
+						<button
+							type="button"
+							class="btn btn-xs btn-ghost -mr-1"
+							@click.prevent="removeItem(item.id)"
+							aria-label={ props.ClearLabel }
+						>
+							✕
+						</button>
+					</span>
+				</template>
+			</div>
+		}
+		<div class="relative">
+			<input
+				id={ props.ID + "-input" }
+				type="text"
+				x-ref="searchInput"
+				x-model="query"
+				@input="onSearch()"
+				@focus="onFocus()"
+				@blur="onBlur()"
+				@keydown.escape="close()"
+				placeholder={ props.Placeholder }
+				autocomplete="off"
+				class="input input-bordered w-full pr-16"
+			/>
+			<input type="hidden" name={ props.Name } :value="value"/>
+			<button
+				type="button"
+				class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
+				@click.prevent="clear()"
+				x-show="hasSelection"
+				x-cloak
+				x-text="clearLabel"
+			>
+				{ props.ClearLabel }
+			</button>
+		</div>
+		<div
+			x-ref="resultsContainer"
+			id={ props.resultID() }
+			class="absolute w-full z-50"
+		></div>
+	</div>
+}

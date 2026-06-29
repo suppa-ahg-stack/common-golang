@@ -1,6 +1,7 @@
 package app
 
 import (
+	"reflect"
 	"testing"
 
 	"suppa-ahg-stack/common-golang/serverutil"
@@ -122,7 +123,7 @@ func TestWithFragmentInputRoundTrip(t *testing.T) {
 
 	ctx := WithFragmentInput(t.Context(), input)
 	got := GetFragmentInput(ctx)
-	if got != input {
+	if !reflect.DeepEqual(got, input) {
 		t.Fatalf("expected fragment input %+v, got %+v", input, got)
 	}
 }

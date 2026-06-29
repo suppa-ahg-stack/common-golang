@@ -6,7 +6,7 @@ import "strconv"
 // Dynamic state (unread count, list, loading) is driven by the Alpine.js
 // notificationCenter store registered by @frontend-common/core.
 type NotificationBellProps struct {
-	ID                string
+	ID                   string
 	SummaryEndpoint      string
 	ListEndpoint         string
 	MarkReadEndpoint     string
@@ -33,7 +33,7 @@ templ NotificationBell(props NotificationBellProps) {
 		id={ props.ID }
 		class="relative inline-block"
 		x-data="notificationBell"
-		x-init={"initFromDOM('" + props.ID + "', '" + dropdownID + "')" }
+		x-init={ "initFromDOM('" + props.ID + "', '" + dropdownID + "')" }
 		data-summary-endpoint={ props.SummaryEndpoint }
 		data-list-endpoint={ props.ListEndpoint }
 		data-mark-read-endpoint={ props.MarkReadEndpoint }
