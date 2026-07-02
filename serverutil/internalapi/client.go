@@ -200,7 +200,7 @@ func (c *HTTPClient) doOnce(req *http.Request, dst any) (*http.Response, error) 
 			return resp, fmt.Errorf("%w: %w", ErrDependencyUnavailable, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)})
 		}
 		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-			return resp, fmt.Errorf("authentication failed: %d: %s", resp.StatusCode, string(body))
+			return resp, fmt.Errorf("authentication failed: %w", &ResponseError{StatusCode: resp.StatusCode, Body: string(body)})
 		}
 		return resp, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)}
 	}
