@@ -23,6 +23,18 @@ const MaxResponseBodyBytes = 1 << 20 // 1 MiB
 // fail closed without exposing internal errors.
 var ErrDependencyUnavailable = errors.New("dependency unavailable")
 
+// ResponseError carries the HTTP status code and response body for a failed
+// internal API call. It is returned by DoJSON for non-2xx responses so callers
+// can inspect StatusCode instead of parsing error strings.
+type ResponseError struct {
+	StatusCode int
+	Body       string
+}
+
+func (e *ResponseError) Error() string {
+	return fmt.Sprintf("auth_app returned %d: %s", e.StatusCode, e.Body)
+}
+
 // Logger is the minimal logging surface used by HTTPClient.
 type Logger interface {
 	Debug(msg string, keysAndValues ...any)
@@ -185,12 +197,12 @@ func (c *HTTPClient) doOnce(req *http.Request, dst any) (*http.Response, error) 
 			return resp, fmt.Errorf("conflict: %d: %s", resp.StatusCode, string(body))
 		}
 		if resp.StatusCode == http.StatusServiceUnavailable || resp.StatusCode == http.StatusGatewayTimeout {
-			return resp, fmt.Errorf("%w: auth_app returned %d: %s", ErrDependencyUnavailable, resp.StatusCode, string(body))
+			return resp, fmt.Errorf("%w: %w", ErrDependencyUnavailable, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)})
 		}
 		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 			return resp, fmt.Errorf("authentication failed: %d: %s", resp.StatusCode, string(body))
 		}
-		return resp, fmt.Errorf("auth_app returned %d: %s", resp.StatusCode, string(body))
+		return resp, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)}
 	}
 
 	if dst != nil {
