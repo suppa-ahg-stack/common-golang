@@ -127,6 +127,44 @@ func TestSearchableSelectEscapesLabels(t *testing.T) {
 	}
 }
 
+func TestSearchableSelectPickerConfigurationOmitsFormValueAndAuxiliaryMarkup(t *testing.T) {
+	ctx := context.Background()
+	props := SearchableSelectProps{
+		ID:                 "matiere-picker",
+		Name:               "matieres",
+		Placeholder:        "Search subjects...",
+		MultiSelect:        true,
+		HideLabel:          true,
+		HideSelected:       true,
+		OmitHiddenInput:    true,
+		InputClass:         "input input-bordered w-full",
+		SelectionEventName: "formation-matiere-selected",
+		ShowAllOnEmpty:     true,
+	}
+
+	html := renderSearchableSelectToString(t, ctx, props)
+
+	for _, expected := range []string{
+		`data-selection-event-name="formation-matiere-selected"`,
+		`data-show-all-on-empty="true"`,
+		`data-searchable-select="true"`,
+		`class="input input-bordered w-full"`,
+	} {
+		if !strings.Contains(html, expected) {
+			t.Errorf("rendered picker missing %q:\n%s", expected, html)
+		}
+	}
+	for _, unexpected := range []string{
+		`for="matiere-picker-input"`,
+		`type="hidden" name="matieres"`,
+		`x-for="item in selected"`,
+	} {
+		if strings.Contains(html, unexpected) {
+			t.Errorf("rendered picker unexpectedly contains %q:\n%s", unexpected, html)
+		}
+	}
+}
+
 func TestSearchableSelectIsCspSafe(t *testing.T) {
 	ctx := context.Background()
 	props := SearchableSelectProps{

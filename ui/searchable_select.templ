@@ -24,6 +24,10 @@ type SearchableSelectOption struct {
 //     to exclude from search results).
 //   - Result items should dispatch a `searchable-select-pick` CustomEvent with
 //     detail {id, label}.
+//   - OrderBy defines the public field the server must use to sort results A→Z.
+//     Leave it empty to let the component send its own default (empty string),
+//     but consumers that expect deterministic ordering should set an explicit
+//     field from the server's whitelist.
 //
 // Static mode:
 //   - Leave SearchAction empty and populate StaticOptions.
@@ -34,24 +38,40 @@ type SearchableSelectOption struct {
 //   - Multi select: the hidden input value is a JSON array of selected ids.
 //     Callers that need multi-select values must parse the JSON server-side.
 type SearchableSelectProps struct {
-	ID              string
-	Name            string
-	Label           string
-	Placeholder     string
-	SearchAction    string
-	SearchParamName string
-	ResultSelector  string
-	ResponseMode    string // "sse" (default) or "html"
-	ExtraPayload    map[string]string
-	MinSearchLength int
-	DebounceMs      int
-	MaxVisibleItems int
-	MaxItems        int
-	MultiSelect     bool
-	StaticOptions   []SearchableSelectOption
-	Selected        []SearchableSelectOption
-	NoResultsLabel  string
-	ClearLabel      string
+	ID                 string
+	Name               string
+	Label              string
+	Placeholder        string
+	SearchAction       string
+	SearchParamName    string
+	ResultSelector     string
+	ResponseMode       string // "sse" (default) or "html"
+	ExtraPayload       map[string]string
+	MinSearchLength    int
+	DebounceMs         int
+	MaxVisibleItems    int
+	MaxItems           int
+	MultiSelect        bool
+	StaticOptions      []SearchableSelectOption
+	Selected           []SearchableSelectOption
+	NoResultsLabel     string
+	ErrorLabel         string
+	ClearLabel         string
+	SelectionEventName string
+	ShowAllOnEmpty     bool
+	HideLabel          bool
+	HideSelected       bool
+	HideClear          bool
+	OmitHiddenInput    bool
+	InputClass         string
+	OrderBy            string
+}
+
+func (p SearchableSelectProps) orderBy() string {
+	if p.OrderBy != "" {
+		return p.OrderBy
+	}
+	return ""
 }
 
 func (p SearchableSelectProps) searchParamName() string {
@@ -129,6 +149,13 @@ func (p SearchableSelectProps) selectedJSON() string {
 	return string(b)
 }
 
+func (p SearchableSelectProps) inputClass() string {
+	if p.InputClass != "" {
+		return p.InputClass
+	}
+	return "input input-bordered w-full pr-16"
+}
+
 func (p SearchableSelectProps) resultID() string {
 	if len(p.ResultSelector) > 0 && p.ResultSelector[0] == '#' {
 		return p.ResultSelector[1:]
@@ -159,10 +186,17 @@ templ SearchableSelect(props SearchableSelectProps) {
 		data-static-options={ props.staticOptionsJSON() }
 		data-selected={ props.selectedJSON() }
 		data-no-results-label={ props.NoResultsLabel }
+		data-error-label={ props.ErrorLabel }
 		data-clear-label={ props.ClearLabel }
+		data-selection-event-name={ props.SelectionEventName }
+		data-show-all-on-empty={ strconv.FormatBool(props.ShowAllOnEmpty) }
+		data-order-by={ props.orderBy() }
+		data-searchable-select="true"
 	>
-		<label class="label" for={ props.ID + "-input" }>{ props.Label }</label>
-		if props.MultiSelect {
+		if !props.HideLabel {
+			<label class="label" for={ props.ID + "-input" }>{ props.Label }</label>
+		}
+		if props.MultiSelect && !props.HideSelected {
 			<div class="flex flex-wrap gap-1 mb-1 min-h-[1.5rem]" x-show="selected.length > 0" x-cloak>
 				<template x-for="item in selected" :key="item.id">
 					<span class="badge badge-outline gap-1">
@@ -191,19 +225,23 @@ templ SearchableSelect(props SearchableSelectProps) {
 				@keydown.escape="close()"
 				placeholder={ props.Placeholder }
 				autocomplete="off"
-				class="input input-bordered w-full pr-16"
+				class={ props.inputClass() }
 			/>
-			<input type="hidden" name={ props.Name } :value="value"/>
-			<button
-				type="button"
-				class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
-				@click.prevent="clear()"
-				x-show="hasSelection"
-				x-cloak
-				x-text="clearLabel"
-			>
-				{ props.ClearLabel }
-			</button>
+			if !props.OmitHiddenInput {
+				<input type="hidden" name={ props.Name } :value="value"/>
+			}
+			if !props.HideClear {
+				<button
+					type="button"
+					class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
+					@click.prevent="clear()"
+					x-show="hasSelection"
+					x-cloak
+					x-text="clearLabel"
+				>
+					{ props.ClearLabel }
+				</button>
+			}
 		</div>
 		<div
 			x-ref="resultsContainer"

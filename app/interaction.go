@@ -26,6 +26,14 @@ type UihPayload struct {
 	Data     json.RawMessage `json:"data"`
 }
 
+// UihSearchEnvelope is the inner payload used by UIH search actions. It is
+// declared here so the planner-aware dispatcher can inspect the real action
+// name for role checks without importing application-specific packages.
+type UihSearchEnvelope struct {
+	Action string          `json:"action"`
+	Params json.RawMessage `json:"params"`
+}
+
 func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandler(
 	sessionValidator SessionValidator,
 	csrfChecker CsrfChecker,
@@ -303,7 +311,22 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) InteractionHandlerW
 			return
 		}
 
-		requiredRoles, ok := actionRoles(actionData.Action)
+		actionForRole := actionData.Action
+		if actionData.Action == "uih-search-action" {
+			// The outer action envelope is "uih-search-action". Its params field is
+			// the inner envelope (action name + params). Extract the inner action
+			// for role resolution.
+			var outer struct {
+				Params json.RawMessage `json:"params"`
+			}
+			if err := json.Unmarshal(payload.Data, &outer); err == nil && len(outer.Params) > 0 && string(outer.Params) != "null" {
+				var envelope UihSearchEnvelope
+				if err := json.Unmarshal(outer.Params, &envelope); err == nil && envelope.Action != "" {
+					actionForRole = envelope.Action
+				}
+			}
+		}
+		requiredRoles, ok := actionRoles(actionForRole)
 		if !ok {
 			http.Error(rec, "unknown action", http.StatusBadRequest)
 			return

@@ -134,13 +134,20 @@ func (c *Client) GetApplicationUser(ctx context.Context, applicationName string,
 	return resp, nil
 }
 
+// actorUserIDPayload is the request body used by toggle and password-reset
+// endpoints that accept an optional actor override.
+type actorUserIDPayload struct {
+	ActorUserID int64 `json:"actor_user_id"`
+}
+
 // CreateOrAttachApplicationUser calls POST
 // /internal/v1/applications/{applicationName}/users.
-func (c *Client) CreateOrAttachApplicationUser(ctx context.Context, applicationName, email string, roles []string) (ApplicationUserDetailResponse, error) {
+func (c *Client) CreateOrAttachApplicationUser(ctx context.Context, applicationName, email string, roles []string, actorUserID int64) (ApplicationUserDetailResponse, error) {
 	path := fmt.Sprintf("/internal/v1/applications/%s/users", url.PathEscape(applicationName))
 	req, err := c.http.NewRequest(ctx, http.MethodPost, path, CreateOrAttachApplicationUserRequest{
-		Email: email,
-		Roles: roles,
+		Email:       email,
+		Roles:       roles,
+		ActorUserID: actorUserID,
 	})
 	if err != nil {
 		return ApplicationUserDetailResponse{}, err
@@ -155,10 +162,11 @@ func (c *Client) CreateOrAttachApplicationUser(ctx context.Context, applicationN
 
 // UpdateApplicationUserRoles calls PUT
 // /internal/v1/applications/{applicationName}/users/{userId}/roles.
-func (c *Client) UpdateApplicationUserRoles(ctx context.Context, applicationName string, userID int64, roles []string) (ApplicationUserDetailResponse, error) {
+func (c *Client) UpdateApplicationUserRoles(ctx context.Context, applicationName string, userID int64, roles []string, actorUserID int64) (ApplicationUserDetailResponse, error) {
 	path := fmt.Sprintf("/internal/v1/applications/%s/users/%d/roles", url.PathEscape(applicationName), userID)
 	req, err := c.http.NewRequest(ctx, http.MethodPut, path, UpdateApplicationUserRolesRequest{
-		Roles: roles,
+		Roles:       roles,
+		ActorUserID: actorUserID,
 	})
 	if err != nil {
 		return ApplicationUserDetailResponse{}, err
@@ -173,19 +181,19 @@ func (c *Client) UpdateApplicationUserRoles(ctx context.Context, applicationName
 
 // ToggleApplicationUserActive calls POST
 // /internal/v1/applications/{applicationName}/users/{userId}/toggle-active.
-func (c *Client) ToggleApplicationUserActive(ctx context.Context, applicationName string, userID int64) (bool, error) {
-	return c.toggleState(ctx, applicationName, userID, "toggle-active")
+func (c *Client) ToggleApplicationUserActive(ctx context.Context, applicationName string, userID int64, actorUserID int64) (bool, error) {
+	return c.toggleState(ctx, applicationName, userID, "toggle-active", actorUserID)
 }
 
 // ToggleApplicationUserBlocked calls POST
 // /internal/v1/applications/{applicationName}/users/{userId}/toggle-blocked.
-func (c *Client) ToggleApplicationUserBlocked(ctx context.Context, applicationName string, userID int64) (bool, error) {
-	return c.toggleState(ctx, applicationName, userID, "toggle-blocked")
+func (c *Client) ToggleApplicationUserBlocked(ctx context.Context, applicationName string, userID int64, actorUserID int64) (bool, error) {
+	return c.toggleState(ctx, applicationName, userID, "toggle-blocked", actorUserID)
 }
 
-func (c *Client) toggleState(ctx context.Context, applicationName string, userID int64, action string) (bool, error) {
+func (c *Client) toggleState(ctx context.Context, applicationName string, userID int64, action string, actorUserID int64) (bool, error) {
 	path := fmt.Sprintf("/internal/v1/applications/%s/users/%d/%s", url.PathEscape(applicationName), userID, action)
-	req, err := c.http.NewRequest(ctx, http.MethodPost, path, nil)
+	req, err := c.http.NewRequest(ctx, http.MethodPost, path, actorUserIDPayload{ActorUserID: actorUserID})
 	if err != nil {
 		return false, err
 	}
@@ -199,9 +207,9 @@ func (c *Client) toggleState(ctx context.Context, applicationName string, userID
 
 // SendApplicationUserPasswordReset calls POST
 // /internal/v1/applications/{applicationName}/users/{userId}/password-reset.
-func (c *Client) SendApplicationUserPasswordReset(ctx context.Context, applicationName string, userID int64) (PasswordResetResponse, error) {
+func (c *Client) SendApplicationUserPasswordReset(ctx context.Context, applicationName string, userID int64, actorUserID int64) (PasswordResetResponse, error) {
 	path := fmt.Sprintf("/internal/v1/applications/%s/users/%d/password-reset", url.PathEscape(applicationName), userID)
-	req, err := c.http.NewRequest(ctx, http.MethodPost, path, nil)
+	req, err := c.http.NewRequest(ctx, http.MethodPost, path, actorUserIDPayload{ActorUserID: actorUserID})
 	if err != nil {
 		return PasswordResetResponse{}, err
 	}

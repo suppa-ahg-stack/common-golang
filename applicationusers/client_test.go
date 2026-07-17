@@ -162,7 +162,7 @@ func TestClientCreateOrAttachApplicationUser(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	resp, err := client.CreateOrAttachApplicationUser(context.Background(), "Planning", "new@example.com", []string{"admin"})
+	resp, err := client.CreateOrAttachApplicationUser(context.Background(), "Planning", "new@example.com", []string{"admin"}, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -193,7 +193,7 @@ func TestClientUpdateApplicationUserRoles(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	resp, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", 42, []string{"formation_manager"})
+	resp, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", 42, []string{"formation_manager"}, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestClientToggleApplicationUserActive(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	state, err := client.ToggleApplicationUserActive(context.Background(), "Planning", 42)
+	state, err := client.ToggleApplicationUserActive(context.Background(), "Planning", 42, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestClientSendApplicationUserPasswordReset(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	resp, err := client.SendApplicationUserPasswordReset(context.Background(), "Planning", 42)
+	resp, err := client.SendApplicationUserPasswordReset(context.Background(), "Planning", 42, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -300,7 +300,7 @@ func TestClientUpdateApplicationUserRolesClientError(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	_, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", 42, []string{"bad_role"})
+	_, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", 42, []string{"bad_role"}, 0)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -342,7 +342,7 @@ func TestClientUserIDInPath(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, "test-key", "cfm_planning")
-	_, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", userID, []string{"admin"})
+	_, err := client.UpdateApplicationUserRoles(context.Background(), "Planning", userID, []string{"admin"}, 0)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

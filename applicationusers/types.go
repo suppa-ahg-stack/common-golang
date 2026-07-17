@@ -33,14 +33,16 @@ type ApplicationUserFilter struct {
 // attaches an existing one to the root organisation and grants the requested
 // roles on the named application.
 type CreateOrAttachApplicationUserRequest struct {
-	Email string   `json:"email"`
-	Roles []string `json:"roles"`
+	Email       string   `json:"email"`
+	Roles       []string `json:"roles"`
+	ActorUserID int64    `json:"actor_user_id"`
 }
 
 // UpdateApplicationUserRolesRequest replaces the user's roles on the named
 // application with the supplied set.
 type UpdateApplicationUserRolesRequest struct {
-	Roles []string `json:"roles"`
+	Roles       []string `json:"roles"`
+	ActorUserID int64    `json:"actor_user_id"`
 }
 
 // ApplicationUserListResponse returns a page of application users and the total
