@@ -43,11 +43,12 @@ type ListOptions struct {
 
 // NotificationCreatedEvent is the SSE payload sent when a new notification is created.
 type NotificationCreatedEvent struct {
-	ID          int64  `json:"id"`
-	CreatedAt   string `json:"created_at"`
-	Title       string `json:"title"`
-	Body        string `json:"body"`
-	UnreadCount int64  `json:"unread_count"`
+	ID          int64          `json:"id"`
+	CreatedAt   string         `json:"created_at"`
+	Title       string         `json:"title"`
+	Body        string         `json:"body"`
+	Payload     map[string]any `json:"payload,omitempty"`
+	UnreadCount int64          `json:"unread_count"`
 }
 
 // NotificationReadEvent is the SSE payload sent when notifications are marked as read.

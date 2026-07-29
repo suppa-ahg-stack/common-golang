@@ -83,7 +83,14 @@ func testLogger() *logger.FileLogger {
 
 func TestServiceCreate(t *testing.T) {
 	ctx := context.Background()
-	created := Notification{ID: 1, UserID: 42, Title: "Hello", Body: "World", CreatedAt: time.Now()}
+	created := Notification{
+		ID:        1,
+		UserID:    42,
+		Title:     "Hello",
+		Body:      "World",
+		Payload:   map[string]any{"action_url": "/tasks/1"},
+		CreatedAt: time.Now(),
+	}
 
 	store := &fakeStore{
 		createFunc: func(_ context.Context, input CreateNotificationInput) (Notification, error) {
@@ -112,6 +119,9 @@ func TestServiceCreate(t *testing.T) {
 	}
 	if pub.createdEvents[0].event.UnreadCount != 5 {
 		t.Fatalf("expected unread count 5, got %d", pub.createdEvents[0].event.UnreadCount)
+	}
+	if pub.createdEvents[0].event.Payload["action_url"] != "/tasks/1" {
+		t.Fatalf("expected action URL in published payload")
 	}
 }
 
