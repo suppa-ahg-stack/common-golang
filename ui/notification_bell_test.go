@@ -70,4 +70,7 @@ func TestNotificationBell(t *testing.T) {
 	if !strings.Contains(html, `data-refresh-label="Refresh"`) {
 		t.Error("expected refresh label data attribute")
 	}
+	if !strings.Contains(html, `x-show="actionURL(n)"`) {
+		t.Error("expected optional notification action")
+	}
 }

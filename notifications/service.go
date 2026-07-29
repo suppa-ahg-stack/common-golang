@@ -51,6 +51,7 @@ func (s *Service) Create(ctx context.Context, sessionID string, input CreateNoti
 		CreatedAt:   n.CreatedAt.Format(time.RFC3339Nano),
 		Title:       n.Title,
 		Body:        n.Body,
+		Payload:     n.Payload,
 		UnreadCount: unread,
 	}
 

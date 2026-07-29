@@ -122,6 +122,13 @@ templ NotificationBell(props NotificationBellProps) {
 								<span class="text-xs opacity-60 whitespace-nowrap" x-text="formatTime(n.created_at)"></span>
 							</div>
 							<p class="text-sm mt-1" :class="{ 'opacity-90': !n.read, 'opacity-70': n.read }" x-text="n.body"></p>
+							<a
+								x-show="actionURL(n)"
+								:href="actionURL(n)"
+								class="link link-primary text-sm mt-2 inline-block"
+								x-text="actionLabel(n)"
+								@click.stop="onActionClick(n)"
+							></a>
 							<template x-if="!n.read && hoveredId === n.id">
 								<div
 									class="absolute bottom-0 left-0 h-0.5 bg-primary opacity-70 w-full"
