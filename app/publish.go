@@ -18,6 +18,11 @@ import (
 // SSE connection identifier.
 const SseConnectionIDHeader = "X-SSE-Connection-ID"
 
+// MaxFragmentSize is the maximum number of bytes a rendered fragment may
+// occupy in memory before being published via SSE. Fragments that exceed
+// this limit are dropped with an error log instead of being broadcast.
+const MaxFragmentSize = 8 * 1024 * 1024 // 8 MiB
+
 // FragmentSSEPayload is the wire payload for a fragment update.
 type FragmentSSEPayload struct {
 	Kind     string `json:"kind"`
@@ -158,6 +163,10 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragmentForP
 		a.Logger.Error(fmt.Sprintf("Failed to render fragment for %s: %v", path, err))
 		return
 	}
+	if buf.Len() > MaxFragmentSize {
+		a.Logger.Error(fmt.Sprintf("Fragment for %s exceeds %d MiB limit (%d bytes); dropped", path, MaxFragmentSize/(1024*1024), buf.Len()))
+		return
+	}
 
 	a.PublishDomUpdate(path, targetSelector, buf.String(), r)
 
@@ -202,6 +211,10 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) PublishFragment(pat
 	var buf bytes.Buffer
 	if err := component.Render(r, ctx, &buf); err != nil {
 		a.Logger.Error("Failed to render fragment for %s: %v", path, err)
+		return
+	}
+	if buf.Len() > MaxFragmentSize {
+		a.Logger.Error(fmt.Sprintf("Fragment for %s/%s exceeds %d MiB limit (%d bytes); dropped", path, selector, MaxFragmentSize/(1024*1024), buf.Len()))
 		return
 	}
 
@@ -388,6 +401,10 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) publishRouteContent
 		a.Logger.Error(fmt.Sprintf("Failed to render fragment for %s: %v", rawPath, err))
 		return false
 	}
+	if buf.Len() > MaxFragmentSize {
+		a.Logger.Error(fmt.Sprintf("Fragment for %s exceeds %d MiB limit (%d bytes); dropped", rawPath, MaxFragmentSize/(1024*1024), buf.Len()))
+		return false
+	}
 
 	return a.PublishDomUpdate(rawPath, selector, buf.String(), r)
 }
@@ -408,6 +425,10 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) publishPageComponen
 		a.Logger.Error(fmt.Sprintf("publishPageComponent: failed to render %s: %v", selector, err))
 		return false
 	}
+	if buf.Len() > MaxFragmentSize {
+		a.Logger.Error(fmt.Sprintf("Component %s/%s exceeds %d MiB limit (%d bytes); dropped", rawPath, selector, MaxFragmentSize/(1024*1024), buf.Len()))
+		return false
+	}
 
 	return a.PublishDomUpdate(rawPath, selector, buf.String(), r)
 }
@@ -421,6 +442,10 @@ func (a *App[TConfig, TQueries, TSessionService, TSseNames]) publishCustomFragme
 	var buf bytes.Buffer
 	if err := fragment.RenderFunc(r, ctx, &buf); err != nil {
 		a.Logger.Error(fmt.Sprintf("publishCustomFragment: failed to render %s: %v", fragment.ID, err))
+		return false
+	}
+	if buf.Len() > MaxFragmentSize {
+		a.Logger.Error(fmt.Sprintf("Custom fragment %s exceeds %d MiB limit (%d bytes); dropped", fragment.ID, MaxFragmentSize/(1024*1024), buf.Len()))
 		return false
 	}
 
