@@ -269,7 +269,6 @@ func mustJSON(v any) json.RawMessage {
 	return b
 }
 
-
 func TestInteractionHandlerWithPlanner_MfaCheckerBlocksAction(t *testing.T) {
 	a := newTestInteractionApp(t)
 	invoked := false

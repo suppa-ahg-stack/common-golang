@@ -57,7 +57,6 @@ func MatchRoute(routes map[string]serverutil.PageRoute, path string) (string, se
 		path = u.Path
 	}
 
-
 	if route, ok := routes[path]; ok {
 		return path, route, true
 	}

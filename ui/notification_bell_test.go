@@ -4,18 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
-
-	"github.com/a-h/templ"
 )
-
-func renderNotificationBellToString(t *testing.T, ctx context.Context, cmp templ.Component) string {
-	t.Helper()
-	var buf strings.Builder
-	if err := cmp.Render(ctx, &buf); err != nil {
-		t.Fatalf("failed to render component: %v", err)
-	}
-	return buf.String()
-}
 
 func TestNotificationBell(t *testing.T) {
 	ctx := context.Background()
@@ -35,7 +24,7 @@ func TestNotificationBell(t *testing.T) {
 		AriaLabel:        "Notifications",
 	}
 
-	html := renderNotificationBellToString(t, ctx, NotificationBell(props))
+	html := renderToString(t, ctx, NotificationBell(props))
 
 	if !strings.Contains(html, `id="notification-bell"`) {
 		t.Error("expected notification bell id")

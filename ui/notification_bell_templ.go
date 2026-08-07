@@ -64,7 +64,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 33, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 33, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -77,7 +77,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue("initFromDOM('" + props.ID + "', '" + dropdownID + "')")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 36, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 36, Col: 66}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {
@@ -90,7 +90,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.SummaryEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 37, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 37, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 		if templ_7745c5c3_Err != nil {
@@ -103,7 +103,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ListEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 38, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 38, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 		if templ_7745c5c3_Err != nil {
@@ -116,7 +116,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 39, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 39, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 		if templ_7745c5c3_Err != nil {
@@ -129,7 +129,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.BulkMarkReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 40, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 40, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 		if templ_7745c5c3_Err != nil {
@@ -142,7 +142,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkAllReadEndpoint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 41, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 41, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -155,7 +155,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.InitialPageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 42, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 42, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -168,7 +168,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.FetchPageSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 43, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 43, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {
@@ -181,7 +181,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.HoverConsiderMs))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 44, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 44, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -194,7 +194,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(props.BulkSendMs))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 45, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 45, Col: 52}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 		if templ_7745c5c3_Err != nil {
@@ -207,7 +207,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 46, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 46, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 		if templ_7745c5c3_Err != nil {
@@ -220,7 +220,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.EmptyLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 47, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 47, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.LoadingLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 48, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 48, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -246,7 +246,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.ErrorLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 49, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 49, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 		if templ_7745c5c3_Err != nil {
@@ -259,7 +259,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.RefreshLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 50, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 50, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -272,7 +272,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.MarkAllReadLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 51, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 51, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 		if templ_7745c5c3_Err != nil {
@@ -285,7 +285,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.DemoButtonLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 52, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 52, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var19)
 		if templ_7745c5c3_Err != nil {
@@ -298,7 +298,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 53, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 53, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var20)
 		if templ_7745c5c3_Err != nil {
@@ -311,7 +311,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.ResolveAttributeValue(props.AriaLabel)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 58, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 58, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var21)
 		if templ_7745c5c3_Err != nil {
@@ -324,7 +324,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(dropdownID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 77, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 77, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
 		if templ_7745c5c3_Err != nil {
@@ -337,7 +337,7 @@ func NotificationBell(props NotificationBellProps) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(listID)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `notification_bell.templ`, Line: 94, Col: 16}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/notification_bell.templ`, Line: 94, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 		if templ_7745c5c3_Err != nil {
