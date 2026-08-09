@@ -29,11 +29,11 @@ type HandlerOptions struct {
 	// Zero disables it.
 	HeartbeatInterval time.Duration
 
-	// OnConnect is called when a client successfully subscribes.
-	OnConnect func(r *http.Request)
+	// OnConnect is called once a client successfully subscribes.
+	OnConnect func(r *http.Request, connectionID uint64)
 
 	// OnDisconnect is called when a client disconnects (or context is cancelled).
-	OnDisconnect func(r *http.Request)
+	OnDisconnect func(r *http.Request, connectionID uint64)
 
 	// UserIDExtractor returns the application-level user identifier to use for
 	// routing events. If nil or empty, the session cookie value is used.
@@ -133,6 +133,12 @@ func Handler(sseEvents *SseEvents, sessionName string, opts HandlerOptions, logg
 					}
 				}
 			}(events)
+		}
+		if opts.OnConnect != nil {
+			opts.OnConnect(r, connID)
+		}
+		if opts.OnDisconnect != nil {
+			defer opts.OnDisconnect(r, connID)
 		}
 
 		primaryBroker := sseEvents.Events[0].GetBroker()
