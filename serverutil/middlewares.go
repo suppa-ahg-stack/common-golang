@@ -36,6 +36,14 @@ type contextKey struct{}
 
 var NonceKey = contextKey{}
 
+// NonceFromContext returns the CSP nonce installed by CspMiddleware.
+// It deliberately returns an empty string when the middleware did not run so
+// callers can pass the value directly to a templ nonce attribute.
+func NonceFromContext(ctx context.Context) string {
+	nonce, _ := ctx.Value(NonceKey).(string)
+	return nonce
+}
+
 func CspMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b := make([]byte, 16)

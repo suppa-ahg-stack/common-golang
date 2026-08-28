@@ -14,7 +14,7 @@ import (
 
 // ErrNotFound is returned when orgs_backoffice reports that the requested
 // application user does not exist (HTTP 404).
-var ErrNotFound = errors.New("not found")
+var ErrNotFound = cinternalapi.ErrNotFound
 
 // ErrUnavailable is returned when orgs_backoffice cannot be reached or reports
 // that it is unavailable.

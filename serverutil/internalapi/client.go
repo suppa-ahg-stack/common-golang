@@ -18,10 +18,14 @@ import (
 // MaxResponseBodyBytes limits the size of outbound JSON response bodies.
 const MaxResponseBodyBytes = 1 << 20 // 1 MiB
 
-// ErrDependencyUnavailable is returned when a downstream service cannot be
-// reached or explicitly reports that it is unavailable. Callers can use it to
-// fail closed without exposing internal errors.
-var ErrDependencyUnavailable = errors.New("dependency unavailable")
+var (
+	// ErrDependencyUnavailable is returned when a downstream service cannot be
+	// reached or explicitly reports that it is unavailable.
+	ErrDependencyUnavailable = errors.New("dependency unavailable")
+	// ErrConflict and ErrNotFound are canonical cross-service status sentinels.
+	ErrConflict = errors.New("conflict")
+	ErrNotFound = errors.New("not found")
+)
 
 // ResponseError carries the HTTP status code and response body for a failed
 // internal API call. It is returned by DoJSON for non-2xx responses so callers
@@ -29,10 +33,15 @@ var ErrDependencyUnavailable = errors.New("dependency unavailable")
 type ResponseError struct {
 	StatusCode int
 	Body       string
+	Service    string
 }
 
 func (e *ResponseError) Error() string {
-	return fmt.Sprintf("auth_app returned %d: %s", e.StatusCode, e.Body)
+	service := e.Service
+	if service == "" {
+		service = "dependency"
+	}
+	return fmt.Sprintf("%s returned %d: %s", service, e.StatusCode, e.Body)
 }
 
 // Logger is the minimal logging surface used by HTTPClient.
@@ -193,16 +202,20 @@ func (c *HTTPClient) doOnce(req *http.Request, dst any) (*http.Response, error) 
 
 	if resp.StatusCode >= 400 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		if resp.StatusCode == http.StatusConflict {
-			return resp, fmt.Errorf("conflict: %d: %s", resp.StatusCode, string(body))
-		}
+		responseErr := &ResponseError{StatusCode: resp.StatusCode, Body: string(body), Service: c.serviceName}
 		if resp.StatusCode == http.StatusServiceUnavailable || resp.StatusCode == http.StatusGatewayTimeout {
-			return resp, fmt.Errorf("%w: %w", ErrDependencyUnavailable, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)})
+			return resp, fmt.Errorf("%w: %w", ErrDependencyUnavailable, responseErr)
 		}
 		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
-			return resp, fmt.Errorf("authentication failed: %w", &ResponseError{StatusCode: resp.StatusCode, Body: string(body)})
+			return resp, fmt.Errorf("authentication failed: %w", responseErr)
 		}
-		return resp, &ResponseError{StatusCode: resp.StatusCode, Body: string(body)}
+		switch resp.StatusCode {
+		case http.StatusConflict:
+			return resp, fmt.Errorf("%w: %w", ErrConflict, responseErr)
+		case http.StatusNotFound:
+			return resp, fmt.Errorf("%w: %w", ErrNotFound, responseErr)
+		}
+		return resp, responseErr
 	}
 
 	if dst != nil {

@@ -19,9 +19,13 @@ func TestFormModalTriggerRendersAccessibleCSPDialog(t *testing.T) {
 		`max-w-3xl max-h-[90vh] overflow-y-auto`,
 		`<form method="dialog" class="modal-backdrop">`,
 	} {
-		if !strings.Contains(html, expected) { t.Errorf("expected %q in %s", expected, html) }
+		if !strings.Contains(html, expected) {
+			t.Errorf("expected %q in %s", expected, html)
+		}
 	}
 	for _, forbidden := range []string{"new CustomEvent", "new ", "{ title:"} {
-		if strings.Contains(html, forbidden) { t.Errorf("forbidden CSP expression %q in %s", forbidden, html) }
+		if strings.Contains(html, forbidden) {
+			t.Errorf("forbidden CSP expression %q in %s", forbidden, html)
+		}
 	}
 }

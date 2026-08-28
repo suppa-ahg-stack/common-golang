@@ -10,11 +10,12 @@ This document is written for AI coding agents that need to work on the `suppa-ah
 * Server-Sent Events (SSE) fan-out with user/session/connection routing.
 * A generic, fragment-based web application framework (the `app` package).
 * Authentication helpers (Argon2 password hashing, service-to-service API keys, CSRF).
+* The canonical `auth_app` wire client and the application-side session lifecycle.
 * Notification domain logic and HTTP handlers.
 * Reusable HTML components written in [templ](https://templ.guide/).
 * Validation, structured logging, and internal HTTP client utilities.
 
-The module path is `suppa-ahg-stack/common-golang` and it targets **Go 1.26.4**.
+The module path is `suppa-ahg-stack/common-golang` and it targets **Go 1.27.0**.
 
 ## Key configuration files
 
@@ -51,6 +52,8 @@ templ generate
 
 ```
 app/                Generic web app framework (routes, fragments, SSE publishing, UI interactions)
+authapp/            Canonical auth_app internal API DTOs and typed client
+authsession/        Identity/role cache, CSRF, rotation and shared HTTP middleware
 generalutil/        Small utilities: env loading, token generation, path resolution
 logger/             Structured logger writing JSON to a file and coloured text to stdout
 notifications/      Notification domain service, REST handlers, cursor pagination, SSE publisher interface
@@ -111,12 +114,23 @@ Shared infrastructure for JSON service-to-service APIs:
 
 ### `ui`
 
-`templ` components intended to be embedded in consuming applications:
+`templ` components and rendering adapters intended to be embedded in consuming applications:
 
 * `ConfirmModal` — DaisyUI/Alpine.js confirmation dialog.
 * `NotificationBell` — notification dropdown driven by the REST endpoints above.
+* `ModalToastContainer` — stable target for modal-scoped `ui.toast` events.
+* `ComponentRenderer` — adapts dynamic render callbacks to `templ.Component`.
 
 The generated `*_templ.go` files must stay in sync with the `.templ` sources.
+
+### `authapp` and `authsession`
+
+`authapp` owns the JSON contract used by the auth server and every consumer,
+including idempotent user mutations and structured 404/409/unavailable errors.
+`authsession` owns the bounded identity and role caches, singleflight cache
+misses, fresh validation for mutations, token/CSRF transfer on rotation and
+the shared HTTP middleware. Applications still select their role-error policy
+and keep role gates and audit logging locally.
 
 ### `validator`
 

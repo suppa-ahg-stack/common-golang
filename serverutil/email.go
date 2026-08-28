@@ -17,10 +17,10 @@ import (
 var ErrEmailNotConfigured = errors.New("email sender not configured")
 
 var (
-	errSMTPHostFromMismatch     = errors.New("SMTP host and sender must both be configured or both omitted")
-	errSMTPPortInvalid          = errors.New("SMTP port must be between 1 and 65535")
-	errSMTPFromInvalid          = errors.New("SMTP_FROM must be a valid email address")
-	errSMTPCredentialsPartial   = errors.New("SMTP_USER and SMTP_PASSWORD must both be supplied or both omitted")
+	errSMTPHostFromMismatch   = errors.New("SMTP host and sender must both be configured or both omitted")
+	errSMTPPortInvalid        = errors.New("SMTP port must be between 1 and 65535")
+	errSMTPFromInvalid        = errors.New("SMTP_FROM must be a valid email address")
+	errSMTPCredentialsPartial = errors.New("SMTP_USER and SMTP_PASSWORD must both be supplied or both omitted")
 )
 
 type EmailSender struct {
