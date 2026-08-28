@@ -1,0 +1,22 @@
+package ui
+
+type FormModalTriggerProps struct {
+	ID         string
+	Label      string
+	Title      string
+	Variant    string
+	SizeClass  string
+}
+
+templ FormModalTrigger(props FormModalTriggerProps) {
+	<div x-data>
+		<button type="button" class={ templ.KV("btn btn-primary", props.Variant == "primary"), templ.KV("btn", props.Variant != "primary") } @click="$refs.formModal.showModal()">{ props.Label }</button>
+		<dialog id={ props.ID } class="modal" data-agent-card-modal aria-labelledby={ props.ID + "-title" } x-ref="formModal">
+			<div class={ "modal-box " + props.SizeClass + " max-h-[90vh] overflow-y-auto" }>
+				<h2 id={ props.ID + "-title" } class="text-lg font-bold mb-4">{ props.Title }</h2>
+				{ children... }
+			</div>
+			<form method="dialog" class="modal-backdrop"><button tabindex="-1">close</button></form>
+		</dialog>
+	</div>
+}
